@@ -16,12 +16,11 @@ services:
     image: ghcr.io/dramatic4678565/mosaic:latest
     container_name: mosaic
     ports:
-      # 8080 on the host, because the editor's own dev tooling defaults to 8080
-      # elsewhere and 8080 is the port documented in the README.
-      - "8080:80"
+      # Host 8080 -> container 8080 (the unprivileged nginx default).
+      - "8080:8080"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/"]
       interval: 30s
       timeout: 5s
       retries: 3

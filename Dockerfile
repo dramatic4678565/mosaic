@@ -59,7 +59,15 @@ RUN test -f /opt/mosaic/mosaic-dashboard/dist/index.html \
 # ---------------------------------------------------------------------------
 # Stage 2 — serve
 # ---------------------------------------------------------------------------
-FROM nginx:1.27-alpine AS serve
+# nginx-unprivileged rather than stock nginx:alpine.
+#
+# Stock nginx runs as root, drops to the `nginx` user for workers but keeps root
+# for the master, and writes its pid file and the *_temp directories under /var.
+# Running it fully as an unprivileged user (which we want) therefore needs a pile
+# of chown calls that break silently when a path changes between base images.
+# This image is purpose-built for it: it runs as uid 101, listens on 8080 and
+# needs no writable /var paths.
+FROM nginxinc/nginx-unprivileged:1.27-alpine AS serve
 
 # Replace the stock site, then drop both builds in.
 RUN rm -rf /usr/share/nginx/html/*
@@ -72,21 +80,15 @@ COPY --from=build /opt/mosaic/excalidraw-app/build /usr/share/nginx/html/app
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
-# The editor's service worker must be served from the path it was built for.
-# Vite's PWA plugin registers `/sw.js`; under /app/ it has to be `/app/sw.js` or
-# the browser silently refuses to register it and offline support silently dies.
+# The editor's service worker is registered at the site root by Vite's PWA
+# plugin. Under /app/ it has to be /app/sw.js or the browser silently refuses to
+# register it and offline support silently dies.
 RUN sed -i 's#/sw.js#/app/sw.js#' /usr/share/nginx/html/app/index.html 2>/dev/null || true
 
-# Run as a non-root user. nginx:alpine ships an `nginx` user for exactly this.
-RUN chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/log/nginx \
- && touch /var/run/nginx.pid \
- && chown nginx:nginx /var/run/nginx.pid
-
-USER nginx
-
-EXPOSE 80
+# 8080 is the unprivileged image's default and is what nginx.conf listens on.
+EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -q -O /dev/null http://localhost/ || exit 1
+  CMD wget -q -O /dev/null http://localhost:8080/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
