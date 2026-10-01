@@ -1,0 +1,105 @@
+name: Upstream sync
+
+# Daily merge of excalidraw/excalidraw into Mosaic, opening a PR.
+#
+# Hard rules enforced here (see UPSTREAM_SYNC.md):
+#   - never auto-merges into main; a human merges the PR
+#   - branded files keep the Mosaic side on conflict, everything else takes
+#     upstream
+#   - free Actions tier only; uses the built-in GITHUB_TOKEN, no PAT
+#
+# The script is idempotent and exits 0 without doing anything when main already
+# contains upstream/master, so the daily cron costs nothing on a quiet day.
+
+on:
+  schedule:
+    # 03:00 UTC daily. Off the hour boundary on purpose: GitHub delays the
+    # top-of-hour scheduled runs to avoid a thundering herd.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Resolve conflicts and report, then abort without pushing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # push the sync branch
+  pull-requests: write # open the PR
+  issues: write # file an issue when the build is red
+
+concurrency:
+  # One sync at a time. Two overlapping runs would race on the same
+  # upstream-sync/<date> branch name.
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Merge upstream/master and open a PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          # Full history: the merge needs upstream's commit graph, and
+          # `--allow-unrelated-histories` is not desirable here.
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Configure git identity
+        run: |
+          git config user.name "mosaic-bot"
+          git config user.email "mosaic-bot@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/excalidraw/excalidraw.git
+          git remote -v
+
+      - name: Restore yarn cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            ~/.cache/yarn
+            ~/.yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      # The script itself does the install/build/test/PR dance, so CI and a
+      # developer's laptop follow exactly the same path.
+      - name: Run sync
+        id: sync
+        env:
+          # Lets `gh pr create` authenticate without a PAT.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The script pushes with plain git; make sure it can authenticate.
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "::notice::dry run requested - no branch will be pushed"
+            bash scripts/sync-upstream.sh --no-pr
+          else
+            bash scripts/sync-upstream.sh
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Upstream sync"
+            echo ""
+            if [ "${{ steps.sync.outcome }}" = "success" ]; then
+              echo "Merged upstream/master and opened a PR (or found nothing to sync)."
+            else
+              echo "Sync did not complete. Nothing was merged into main."
+              echo "If the build was red, an issue with the diff was opened."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

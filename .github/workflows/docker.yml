@@ -1,0 +1,96 @@
+name: Docker image
+
+# Builds the Mosaic image and publishes it to GHCR on a version tag.
+#
+# Free Actions tier only: ubuntu-latest, the built-in GITHUB_TOKEN, and no
+# registry credentials to configure. GHCR accepts GITHUB_TOKEN directly when
+# the repository grants `packages: write`.
+#
+# The tag filter is `v*`, matching the release tags created by STEP 7.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish (defaults to the current ref)"
+        required: false
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    name: Build and push
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    permissions:
+      contents: read
+      packages: write # required to push to GHCR
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      # Buildx is needed for multi-stage builds and for pushing by digest.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@988b5a0280414f521da01fcc63a27aeeb4b104db # v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          # The built-in token. No PAT, no stored docker-login secret.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive image tags
+        id: meta
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+          # On a `v*` tag push, also move `latest`.
+          flavor: |
+            latest=auto
+
+      - name: Build and push
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Provenance/SBOM attestation keeps the free tier's build cache correct
+          # and gives the published image a verifiable link back to this commit.
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test the pushed image
+        # Pull it back and assert both routes respond, so a broken publish is
+        # caught here rather than by whoever runs it next.
+        run: |
+          set -euo pipefail
+          IMAGE="$(echo "${{ steps.meta.outputs.tags }}" | head -n1)"
+          docker pull "$IMAGE"
+          docker run -d --name mosaic-smoke -p 8080:80 "$IMAGE"
+          # Give nginx a moment to bind.
+          for i in $(seq 1 20); do
+            if curl -fsS http://localhost:8080/ >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          echo "--- / (dashboard) ---"
+          curl -fsS http://localhost:8080/ | grep -o "<title>[^<]*</title>"
+          echo "--- /app/ (editor) ---"
+          curl -fsS http://localhost:8080/app/ | grep -o "<title>[^<]*</title>"
+          docker rm -f mosaic-smoke
