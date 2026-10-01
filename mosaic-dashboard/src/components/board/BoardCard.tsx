@@ -73,8 +73,17 @@ export const BoardCard = ({
     navigate(`/board/${board.id}`);
   };
 
+  /**
+   * Card click handler.
+   *
+   * React portals propagate synthetic events along the *React* tree, not the DOM
+   * tree. The context menu is portaled to `document.body` but is still a React
+   * child of this card, so a click on a menu item bubbles here too and would
+   * open the board. The `menuOpen` check short-circuits that: while the menu is
+   * open, clicks coming from it must not be treated as a card activation.
+   */
   const handleClick = (event: React.MouseEvent) => {
-    if (renaming) {
+    if (renaming || menuOpen) {
       return;
     }
     if (event.shiftKey) {

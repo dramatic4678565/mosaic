@@ -13,6 +13,25 @@ export default defineConfig(({ mode }) => {
   const envVars = loadEnv(mode, `../`);
   // https://vitejs.dev/config/
   return {
+    /**
+     * Public base path, overridable via `EXCALIDRAW_BASE_PATH`.
+     *
+     * Defaults to "/", i.e. the editor's normal standalone deployment, which is
+     * what production uses (nginx serves it at the root).
+     *
+     * The dashboard mounts the editor in an iframe under `/editor/`. For the
+     * dev proxy in `mosaic-dashboard/vite.config.mts` to work, the editor's dev
+     * server must emit `/editor/`-prefixed module URLs — otherwise its
+     * transformed imports ("/App.tsx", "/@vite/client") are requested from the
+     * *dashboard's* origin, which does not have the editor's module graph and
+     * answers 404. Setting the base fixes that by making every generated URL
+     * absolute with the right prefix.
+     *
+     * This is read from `process.env` rather than the editor's own env files
+     * because it is a *deployment* concern (who is mounting me), not a feature
+     * flag, and it must be visible to the dashboard's Playwright config too.
+     */
+    base: process.env.EXCALIDRAW_BASE_PATH ?? "/",
     server: {
       port: Number(envVars.VITE_APP_PORT || 3000),
       // open the browser

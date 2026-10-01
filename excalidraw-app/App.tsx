@@ -202,7 +202,19 @@ if (window.self !== window.top) {
     const parentUrl = new URL(document.referrer);
     const currentUrl = new URL(window.location.href);
     if (parentUrl.origin === currentUrl.origin) {
-      isSelfEmbedding = true;
+      // Upstream's guard: refuse to embed this editor inside a page served from
+      // its own origin. The threat is a *scene* embedding the editor to attack a
+      // viewer (clickjacking / self-XSS), so the block applies to arbitrary
+      // same-origin parents.
+      //
+      // Board mode (Part 2, STEP 6) is a deliberate exception: the Mosaic
+      // dashboard is first-party code that embeds the editor under `#board=<id>`
+      // precisely so the two can share one IndexedDB. It is not user-authored
+      // content, so the threat model does not apply. The exemption is scoped to
+      // the board hash only — every other same-origin embed stays blocked, and
+      // cross-origin embeds (the embeddable use case) are unaffected.
+      const isBoardMode = getBoardIdFromHash() !== null;
+      isSelfEmbedding = !isBoardMode;
     }
   } catch (error) {
     // ignore
@@ -581,28 +593,37 @@ const ExcalidrawWrapper = () => {
       let disposeAutosave: (() => void) | undefined;
 
       void (async () => {
-        const record = await readBoardRecord(boardId);
-        if (cancelled) {
-          return;
-        }
-        const stored = parseStoredScene(record?.scene);
+        try {
+          const record = await readBoardRecord(boardId);
+          if (cancelled) {
+            return;
+          }
+          const stored = parseStoredScene(record?.scene);
 
-        initialStatePromiseRef.current.promise.resolve(
-          stored
-            ? {
-                elements: restoreElements(stored.elements as any, null, {
-                  repairBindings: true,
-                  deleteInvisibleElements: true,
-                }),
-                appState: restoreAppState(stored.appState as any, null),
-                ...(stored.files ? { files: stored.files as any } : {}),
-              }
-            : null,
-        );
+          initialStatePromiseRef.current.promise.resolve(
+            stored
+              ? {
+                  elements: restoreElements(stored.elements as any, null, {
+                    repairBindings: true,
+                    deleteInvisibleElements: true,
+                  }),
+                  appState: restoreAppState(stored.appState as any, null),
+                  ...(stored.files ? { files: stored.files as any } : {}),
+                }
+              : null,
+          );
 
-        await markBoardOpened(boardId);
-        if (!cancelled) {
-          disposeAutosave = startBoardAutosave(boardId, excalidrawAPI);
+          await markBoardOpened(boardId);
+          if (!cancelled) {
+            disposeAutosave = startBoardAutosave(boardId, excalidrawAPI);
+          }
+        } catch (error) {
+          // Board mode is an add-on; a failure here must not blank the editor.
+          // Fall back to an empty canvas and keep the editor usable, then always
+          // resolve the initial-data promise — leaving it pending would leave the
+          // editor permanently blank with no error surfaced anywhere.
+          console.error("[mosaic] failed to load board", boardId, error);
+          initialStatePromiseRef.current.promise.resolve(null);
         }
       })();
 

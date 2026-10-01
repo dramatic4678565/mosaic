@@ -135,23 +135,39 @@
   color: t.$color-text-muted;
 }
 
+/*
+ * The "..." button is always visible, not revealed on `:hover`.
+ *
+ * Two reasons, both practical:
+ * - a hover-only control is unusable on a touchscreen and unreachable by keyboard;
+ * - a `display: none` / `opacity: 0` control cannot be reliably clicked by
+ *   automation (it is considered hidden, and forcing a click dispatches at the
+ *   coordinates and lands on whatever is underneath — here, the card, which then
+ *   toggles selection instead of opening the menu).
+ *
+ * It is styled to stay out of the way (small, low-contrast) and darkens on hover,
+ * which gives the same affordance honestly.
+ */
 .menuButton {
   position: absolute;
   top: t.$space-sm;
   right: 40px;
   width: 26px;
   height: 26px;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  font-size: 16px;
+  background: rgba(255, 255, 255, 0.86);
+  font-size: 15px;
   line-height: 1;
-  color: t.$color-text-muted;
+  color: t.$color-text-faint;
+  transition: color 0.12s ease, background 0.12s ease;
 
-  .card:hover & {
-    display: flex;
+  &:hover,
+  &:focus-visible {
+    color: t.$color-text;
+    background: t.$color-surface;
   }
 }

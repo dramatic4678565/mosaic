@@ -74,6 +74,23 @@ export default defineConfig({
   },
   //@ts-ignore
   test: {
+    /**
+     * The dashboard has its own vitest project (`mosaic-dashboard/vitest.config.mts`)
+     * and must not be collected here.
+     *
+     * Its tests import through the `@/` alias, need `fake-indexeddb` installed
+     * before Dexie loads, and rely on its own `setupFiles`. Running them under
+     * this config fails to resolve the alias and crashes on IndexedDB, which
+     * looks like real breakage but is purely a harness mismatch. `yarn
+     * test:dashboard` runs them correctly, and `test:all` chains both.
+     */
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "mosaic-dashboard/**",
+      "examples/**",
+    ],
     // Since hooks are running in stack in v2, which means all hooks run serially whereas
     // we need to run them in parallel
     sequence: {

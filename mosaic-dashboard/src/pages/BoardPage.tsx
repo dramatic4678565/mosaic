@@ -102,7 +102,7 @@ export const BoardPage = () => {
     return null;
   }
 
-  const editorUrl = buildEditorUrl(id, board?.scene);
+  const editorUrl = buildEditorUrl(id);
 
   return (
     <div
@@ -176,19 +176,20 @@ export const BoardPage = () => {
  * render before its first autosave. Prod: the editor is served from `/`, so a
  * relative `/#board=<id>` works under the same nginx.
  */
-const buildEditorUrl = (boardId: string, scene?: string) => {
-  const base =
-    (import.meta.env.VITE_EDITOR_URL as string | undefined)?.replace(
-      /\/$/,
-      "",
-    ) ?? "";
+const buildEditorUrl = (boardId: string) => {
+  // Always a same-origin relative path, in dev as well as production.
+  //
+  // In dev, `vite.config.mts` proxies `/editor` to the editor's own dev server,
+  // so the iframe lands on the dashboard's origin. That is load-bearing, not
+  // cosmetic: IndexedDB is partitioned per origin and board mode reads scenes
+  // straight out of the dashboard's database, so across two ports the editor
+  // would open an empty board every single time.
+  //
+  // The scene is NOT passed in the URL. The editor hydrates from IndexedDB
+  // itself in board mode; embedding a (possibly multi-megabyte) scene in the
+  // fragment bloats the URL, leaks board content into browser history, and
+  // complicates hydration precedence (which of URL vs DB wins?). One source.
   const params = new URLSearchParams();
   params.set("board", boardId);
-  let url = `${base}/#${params.toString()}`;
-  if (scene) {
-    // Inline the scene on first open only; afterwards the editor hydrates from
-    // IndexedDB itself, so we keep the URL light.
-    url += `&scene=${encodeURIComponent(scene)}`;
-  }
-  return url;
+  return `/editor/#${params.toString()}`;
 };

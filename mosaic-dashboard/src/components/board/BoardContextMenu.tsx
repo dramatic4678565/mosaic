@@ -60,7 +60,15 @@ export const BoardContextMenu = ({
     }
   }, [open]);
 
-  const run = (fn: () => void) => () => {
+  /**
+   * Wraps a menu action.
+   *
+   * Most actions should close the menu first (`closeThen`). Rename is the
+   * exception: it flips the card into inline-edit mode, and closing the menu
+   * unmounts the popover on the same render that sets `renaming`, which loses the
+   * flag. So rename runs *after* the close and the card re-renders with its input.
+   */
+  const closeThen = (onClose: () => void, fn: () => void) => () => {
     onClose();
     fn();
   };
@@ -69,13 +77,19 @@ export const BoardContextMenu = ({
     <ContextMenu open={open} anchorEl={anchorEl} onClose={onClose}>
       {isTrashView ? null : (
         <>
-          <Item onClick={run(actions.onOpen)} testId="menu-open">
+          <Item onClick={closeThen(onClose, actions.onOpen)} testId="menu-open">
             {t("board.action.open")}
           </Item>
-          <Item onClick={run(actions.onRename)} testId="menu-rename">
+          <Item
+            onClick={closeThen(onClose, actions.onRename)}
+            testId="menu-rename"
+          >
             {t("board.action.rename")}
           </Item>
-          <Item onClick={run(actions.onDuplicate)} testId="menu-duplicate">
+          <Item
+            onClick={closeThen(onClose, actions.onDuplicate)}
+            testId="menu-duplicate"
+          >
             {t("board.action.duplicate")}
           </Item>
 
@@ -88,7 +102,7 @@ export const BoardContextMenu = ({
           {expanded === "move" ? (
             <div className={styles.submenu} data-testid="menu-move-list">
               <Item
-                onClick={run(() => actions.onMove(null))}
+                onClick={closeThen(onClose, () => actions.onMove(null))}
                 testId="menu-move-unfiled"
               >
                 {t("board.action.unfiled")}
@@ -96,7 +110,7 @@ export const BoardContextMenu = ({
               {folders.map((folder) => (
                 <Item
                   key={folder.id}
-                  onClick={run(() => actions.onMove(folder.id))}
+                  onClick={closeThen(onClose, () => actions.onMove(folder.id))}
                   testId={`menu-move-${folder.id}`}
                 >
                   {folder.name}
@@ -121,25 +135,27 @@ export const BoardContextMenu = ({
           {expanded === "download" ? (
             <div className={styles.submenu} data-testid="menu-download-list">
               <Item
-                onClick={run(() => actions.onDownload("mosaic"))}
+                onClick={closeThen(onClose, () => actions.onDownload("mosaic"))}
                 testId="menu-download-mosaic"
               >
                 {t("board.download.mosaic")}
               </Item>
               <Item
-                onClick={run(() => actions.onDownload("excalidraw"))}
+                onClick={closeThen(onClose, () =>
+                  actions.onDownload("excalidraw"),
+                )}
                 testId="menu-download-excalidraw"
               >
                 {t("board.download.excalidraw")}
               </Item>
               <Item
-                onClick={run(() => actions.onDownload("png"))}
+                onClick={closeThen(onClose, () => actions.onDownload("png"))}
                 testId="menu-download-png"
               >
                 {t("board.download.png")}
               </Item>
               <Item
-                onClick={run(() => actions.onDownload("svg"))}
+                onClick={closeThen(onClose, () => actions.onDownload("svg"))}
                 testId="menu-download-svg"
               >
                 {t("board.download.svg")}
@@ -148,11 +164,15 @@ export const BoardContextMenu = ({
           ) : null}
 
           <div className={styles.separator} />
-          <Item onClick={run(actions.onTrash)} testId="menu-trash" danger>
+          <Item
+            onClick={closeThen(onClose, actions.onTrash)}
+            testId="menu-trash"
+            danger
+          >
             {t("board.action.trash")}
           </Item>
           <Item
-            onClick={run(actions.onDeleteForever)}
+            onClick={closeThen(onClose, actions.onDeleteForever)}
             testId="menu-delete-forever"
             danger
           >
@@ -163,11 +183,14 @@ export const BoardContextMenu = ({
 
       {isTrashView ? (
         <>
-          <Item onClick={run(actions.onRestore)} testId="menu-restore">
+          <Item
+            onClick={closeThen(onClose, actions.onRestore)}
+            testId="menu-restore"
+          >
             {t("board.action.restore")}
           </Item>
           <Item
-            onClick={run(actions.onDeleteForever)}
+            onClick={closeThen(onClose, actions.onDeleteForever)}
             testId="menu-delete-forever"
             danger
           >

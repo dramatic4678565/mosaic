@@ -9,3 +9,6 @@ packages/excalidraw/types
 examples/**/public
 dev-dist
 coverage
+mosaic-dashboard/test-results
+mosaic-dashboard/playwright-report
+mosaic-dashboard/blob-report
