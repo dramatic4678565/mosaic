@@ -1,19 +1,48 @@
+# Mosaic Dockerfile build context.
+#
+# Allow-list, not deny-list: a new top-level directory is excluded by default
+# until someone deliberately adds it here. That is the behaviour you want, since
+# a missing entry produces a confusing build failure rather than a silently
+# oversized image.
+
 *
 !.env.development
 !.env.production
+!.eslintignore
 !.eslintrc.json
-!.npmrc
 !.prettierrc
+!crowdin.yml
+!docker/
 !excalidraw-app/
+!mosaic-dashboard/
 !package.json
 !public/
 !packages/
 !scripts/
+!setupTests.ts
 !tsconfig.json
+!vitest.config.mts
 !yarn.lock
+!Dockerfile
 
 # keep (sub)sub directories at the end to exclude from explicit included
 # e.g. ./packages/excalidraw/{dist,node_modules}
 **/build
 **/dist
 **/node_modules
+
+# Playwright output: large, regenerated, never part of an image build.
+**/test-results
+**/playwright-report
+**/.playwright
+
+# Git metadata: the Dockerfile COPYs an explicit allow-list, so .git is not
+# needed. Ignoring it keeps the context small and stops accidental leakage.
+.git
+.gitignore
+
+# Local env overrides and editor droppings.
+.env.local
+.env.*.local
+*.log
+.DS_Store

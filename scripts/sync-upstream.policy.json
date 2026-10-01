@@ -1,0 +1,21 @@
+{
+  "$comment": "Machine-readable conflict policy for upstream sync. Read by scripts/sync-upstream.sh and scripts/sync-upstream.ps1 so the two cannot drift apart. Human-readable explanation lives in UPSTREAM_SYNC.md.",
+  "upstreamRemote": "upstream",
+  "upstreamBranch": "master",
+  "prLabel": "upstream-sync",
+  "branchPrefix": "upstream-sync",
+
+  "oursPatterns": ["mosaic-brand/*", "packages/mosaic-brand/*", "excalidraw-app/public/*", "packages/excalidraw/locales/en.json", "scripts/brand/*", "memory/*", "REBRAND.md", "UPSTREAM_SYNC.md", "NOTICE", "mosaic-dashboard/**"],
+
+  "oursRationale": {
+    "mosaic-brand/*": "source artwork; upstream has no equivalent",
+    "packages/mosaic-brand/*": "Mosaic-only brand constants package",
+    "excalidraw-app/public/*": "regenerated Mosaic favicons/PWA/OG artwork",
+    "packages/excalidraw/locales/en.json": "contains the rebranded product name; the other 57 locales are Crowdin-managed and must take upstream",
+    "scripts/brand/*": "Mosaic-only rebrand and verification tooling",
+    "memory/*": "Mosaic-only project memory notes",
+    "mosaic-dashboard/**": "Mosaic-only dashboard app; upstream has no counterpart, so this only matters if a future upstream adds a colliding path"
+  },
+
+  "theirsRationale": "Everything else is upstream-maintained code. Taking our side of an unrelated conflict would freeze us on stale code and drop upstream's security fixes."
+}

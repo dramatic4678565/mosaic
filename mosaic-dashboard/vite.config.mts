@@ -12,11 +12,16 @@ import { defineConfig } from "vite";
  *    `src/` entry the same way `excalidraw-app/vite.config.mts` aliases the other
  *    `@excalidraw/*` workspace packages. Without this the import fails to resolve.
  *
- * 2. The dashboard is served from `/dashboard/` in production (same nginx as the
- *    editor), so `base` must match that sub-path and the router must use a
- *    matching basename. Both are driven by BASE_URL, overridable with
- *    MOSAIC_DASHBOARD_BASE: production sets `/dashboard/`, dev and the e2e run
- *    set `/`. One code path, two deployments.
+ * 2. The dashboard is served from `/` by the nginx in `Dockerfile`
+ *    (`/` = dashboard, `/app/` = editor), so `/` is the default base and needs
+ *    no configuration. A deployment that mounts the dashboard on a sub-path sets
+ *    `MOSAIC_DASHBOARD_BASE=/some/path/`. The router reads the same value via
+ *    `import.meta.env.BASE_URL`, so the two cannot drift.
+ *
+ * The editor mount point is a separate concern: `VITE_EDITOR_BASE` (see
+ * `.env.e2e` and `vite-env.d.ts`), defaulting to `/app/` to match nginx. The
+ * e2e preview server mounts it at `/editor/` and the suite passes the same
+ * value to both sides.
  */
 const BASE_URL = process.env.MOSAIC_DASHBOARD_BASE ?? "/";
 

@@ -1,0 +1,25 @@
+Mosaic
+Copyright (c) 2026 Mosaic contributors
+
+This product is a fork of Excalidraw.
+
+Excalidraw
+Copyright (c) 2021 Excalidraw contributors
+https://github.com/excalidraw/excalidraw
+
+Mosaic is a fork of Excalidraw, used under the MIT License. The upstream LICENSE
+file is preserved verbatim at ./LICENSE and its copyright notice has not been
+altered, as required by that license.
+
+Modifications made in Mosaic include, among others:
+  - a product rebrand (name, logo, icons, metadata, and translated strings)
+  - a new dashboard application (boards, folders, favorites, activity, trash)
+  - a board-mode bridge between the dashboard and the editor
+  - self-maintaining project infrastructure (upstream sync, CI, Docker)
+
+The "Excalidraw+" name, the excalidraw.com domain, and links to upstream
+resources are the property of the Excalidraw project and are referenced under
+the terms set by that project.
+
+Third-party dependencies retain their own licenses; see the corresponding
+package metadata and node_modules for details.

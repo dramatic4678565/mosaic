@@ -607,6 +607,9 @@ const ExcalidrawWrapper = () => {
                     repairBindings: true,
                     deleteInvisibleElements: true,
                   }),
+                  // `parseStoredScene` has already stripped the non-serialisable
+                  // `collaborators` Map; restoreAppState reinstates a fresh empty
+                  // Map from its defaults.
                   appState: restoreAppState(stored.appState as any, null),
                   ...(stored.files ? { files: stored.files as any } : {}),
                 }

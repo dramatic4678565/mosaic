@@ -19,9 +19,11 @@ describe("i18n", () => {
     expect(t("activity.stats", { count: 3, recent: 2 })).toBe(
       "3 edits · 2 this week",
     );
-    expect(t("settings.usage", { boards: 5, folders: 2 })).toBe(
-      "Using 5 boards and 2 folders",
-    );
+    // pluralize supplies the noun for settings.usage; the template deliberately
+    // has no hard-coded plural.
+    expect(
+      t("settings.usage", { boards: "5 boards", folders: "2 folders" }),
+    ).toBe("Using 5 boards and 2 folders");
   });
 
   it("leaves unknown placeholders untouched rather than printing undefined", () => {

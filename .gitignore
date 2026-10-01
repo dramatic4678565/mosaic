@@ -36,3 +36,9 @@ mosaic-dashboard/.playwright
 # Playwright's HTML report bundles node_modules; the symlinked node_modules
 # directories it creates must never be committed.
 mosaic-dashboard/node_modules
+
+# Root-level Playwright output when run from the repo root.
+test-results
+
+# Chrome profile created by scripts/screenshots.js.
+.screenshot-profile
