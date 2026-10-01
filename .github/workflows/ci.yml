@@ -52,10 +52,19 @@ jobs:
         # checkout is depth 1 with only `origin` configured — so the ref does
         # not exist and `git grep` exits 128 with "unable to resolve revision",
         # which reads like a rebrand failure but is a missing ref.
+        #
+        # Depth matters. With `--depth=1`, `git grep <ref>` walks a *shallow*
+        # tree and misses files whose blobs were not fetched, so the upstream
+        # counts came out higher than the working tree and the guard reported
+        # "occurrences were REMOVED" on a branch where nothing had been renamed.
+        # Full history for this one ref, so both sides are counted over the same
+        # tree.
         run: |
           git remote add upstream https://github.com/excalidraw/excalidraw.git
-          git fetch --depth=1 upstream master
+          git fetch upstream master
           git rev-parse --verify upstream/master
+          # Sanity: the baseline must actually be reachable.
+          git grep -c -e 'from "@excalidraw/' upstream/master -- packages >/dev/null
 
       # Restore the dependency cache directly as well. setup-node's `cache:
       # yarn` only caches the yarn *downloads*, not `node_modules`, so without
