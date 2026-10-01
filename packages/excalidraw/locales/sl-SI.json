@@ -72,7 +72,7 @@
     "arrowtype_elbowed": "Puščica tipa komolca",
     "fontSize": "Velikost pisave",
     "fontFamily": "Družina pisave",
-    "addWatermark": "Dodaj \"Izdelano z Excalidraw\"",
+    "addWatermark": "Dodaj \"Izdelano z Mosaic\"",
     "handDrawn": "Ročno narisano",
     "normal": "Običajno",
     "code": "Koda",
@@ -107,7 +107,7 @@
     "untitled": "Neimenovana",
     "name": "Ime",
     "yourName": "Vaše ime",
-    "madeWithExcalidraw": "Izdelano z Excalidraw",
+    "madeWithExcalidraw": "Izdelano z Mosaic",
     "group": "Združi izbor",
     "ungroup": "Razdruži izbor",
     "collaborators": "Sodelavci",
@@ -138,7 +138,7 @@
     "toggleTheme": "Preklapljanje med svetlo/temno temo",
     "theme": "Tema",
     "personalLib": "Osebna knjižnica",
-    "excalidrawLib": "Knjižnica Excalidraw",
+    "excalidrawLib": "Knjižnica Mosaic",
     "decreaseFontSize": "Zmanjšaj velikost pisave",
     "increaseFontSize": "Povečaj velikost pisave",
     "unbindText": "Veži besedilo",
@@ -180,7 +180,7 @@
     "zoomToFitViewport": "Približaj na vidno polje",
     "zoomToFitSelection": "Približaj na izbor",
     "zoomToFit": "Približaj na vse elemente",
-    "installPWA": "Namesti Excalidraw lokalno (PWA)",
+    "installPWA": "Namesti Mosaic lokalno (PWA)",
     "autoResize": "Omogoči samodejno spreminjanje velikosti besedila",
     "imageCropping": "Obrezovanje slike",
     "unCroppedDimension": "Neobrezana dimenzija",
@@ -272,7 +272,7 @@
     "cannotExportEmptyCanvas": "Izvoz prazne scene ni mogoč.",
     "couldNotCopyToClipboard": "Kopiranje v odložišče ni uspelo.",
     "decryptFailed": "Dešifriranje podatkov ni uspelo.",
-    "uploadedSecurly": "Nalaganje je bilo zaščiteno s šifriranjem od konca do konca, kar pomeni, da strežnik Excalidraw in tretje osebe ne morejo brati vsebine.",
+    "uploadedSecurly": "Nalaganje je bilo zaščiteno s šifriranjem od konca do konca, kar pomeni, da strežnik Mosaic in tretje osebe ne morejo brati vsebine.",
     "loadSceneOverridePrompt": "Nalaganje zunanje risbe bo nadomestilo vašo obstoječo vsebino. Ali želite nadaljevati?",
     "collabStopOverridePrompt": "Ustavitev seje bo prepisala vašo prejšnjo, lokalno shranjeno risbo. Ali ste prepričani?\n\n(Če želite obdržati lokalno risbo, preprosto zaprite zavihek brskalnika.)",
     "errorAddingToLibrary": "Elementa ni bilo mogoče dodati v knjižnico",
@@ -280,7 +280,7 @@
     "confirmAddLibrary": "S tem boste v vašo knjižnico dodali oblike ({{numShapes}}). Ali ste prepričani?",
     "imageDoesNotContainScene": "Zdi se, da ta slika ne vsebuje podatkov o sceni. Ali ste med izvozom omogočili vdelavo scene?",
     "cannotRestoreFromImage": "Scene ni bilo mogoče obnoviti iz te slikovne datoteke",
-    "invalidSceneUrl": "S priloženega URL-ja ni bilo mogoče uvoziti scene. Je napačno oblikovana ali pa ne vsebuje veljavnih podatkov Excalidraw JSON.",
+    "invalidSceneUrl": "S priloženega URL-ja ni bilo mogoče uvoziti scene. Je napačno oblikovana ali pa ne vsebuje veljavnih podatkov Mosaic JSON.",
     "resetLibrary": "To bo počistilo vašo knjižnico. Ali ste prepričani?",
     "removeItemsFromsLibrary": "Izbriši elemente ({{count}}) iz knjižnice?",
     "invalidEncryptionKey": "Ključ za šifriranje mora vsebovati 22 znakov. Sodelovanje v živo je onemogočeno.",
@@ -338,7 +338,7 @@
     "bucketfill": "Zapolnjevanje z vedrom",
     "hand": "Roka (orodje za premikanje)",
     "extraTools": "Več orodij",
-    "mermaidToExcalidraw": "Mermaid v Excalidraw",
+    "mermaidToExcalidraw": "Mermaid v Mosaic",
     "convertElementType": "Preklopi vrsto oblike"
   },
   "bucketfill": {
@@ -422,7 +422,7 @@
     "desc_inProgressIntro": "Seja sodelovanja v živo je v teku.",
     "desc_shareLink": "Delite to povezavo z vsemi, s katerimi želite sodelovati:",
     "desc_exitSession": "Ustavitev seje vas bo odklopila od sobe, vendar boste lahko lokalno nadaljevali delo s sceno. To pa ne bo vplivalo na druge osebe. Druge osebe bodo še vedno lahko sodelovale v svoji različici.",
-    "shareTitle": "Pridruži se seji sodelovanja v živo na Excalidraw"
+    "shareTitle": "Pridruži se seji sodelovanja v živo na Mosaic"
   },
   "errorDialog": {
     "title": "Napaka"
@@ -539,8 +539,8 @@
     }
   },
   "encrypted": {
-    "tooltip": "Vaše risbe so šifrirane od konca do konca, tako da jih strežniki Excalidraw nikoli ne bodo videli.",
-    "link": "Blog objava o šifriranju od konca do konca v Excalidraw"
+    "tooltip": "Vaše risbe so šifrirane od konca do konca, tako da jih strežniki Mosaic nikoli ne bodo videli.",
+    "link": "Blog objava o šifriranju od konca do konca v Mosaic"
   },
   "stats": {
     "angle": "Kot",
@@ -650,9 +650,9 @@
     }
   },
   "mermaid": {
-    "title": "Mermaid v Excalidraw",
+    "title": "Mermaid v Mosaic",
     "button": "Vstavi",
-    "description": "Trenutno so podprti samo diagrami <flowchartLink>Diagram poteka</flowchartLink>, <sequenceLink>Zaporedje</sequenceLink>, <classLink>Razred</classLink> in <erdLink>Diagrami entitet in razmerij</erdLink>. Druge vrste bodo v programu Excalidraw upodobljene kot slike.",
+    "description": "Trenutno so podprti samo diagrami <flowchartLink>Diagram poteka</flowchartLink>, <sequenceLink>Zaporedje</sequenceLink>, <classLink>Razred</classLink> in <erdLink>Diagrami entitet in razmerij</erdLink>. Druge vrste bodo v programu Mosaic upodobljene kot slike.",
     "syntax": "Sintaksa Mermaid",
     "preview": "Predogled",
     "label": "Mermaid",

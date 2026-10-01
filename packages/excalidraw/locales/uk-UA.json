@@ -72,7 +72,7 @@
     "arrowtype_elbowed": "Прямокутна стрілка",
     "fontSize": "Розмір шрифту",
     "fontFamily": "Шрифт",
-    "addWatermark": "Додати \"Зроблено з Excalidraw\"",
+    "addWatermark": "Додати \"Зроблено з Mosaic\"",
     "handDrawn": "Ручний апарат",
     "normal": "Звичайний",
     "code": "Код",
@@ -107,7 +107,7 @@
     "untitled": "Без назви",
     "name": "Ім’я",
     "yourName": "Ваше ім’я",
-    "madeWithExcalidraw": "Зроблено з Excalidraw",
+    "madeWithExcalidraw": "Зроблено з Mosaic",
     "group": "Групувати виділене",
     "ungroup": "Розгрупувати виділене",
     "collaborators": "Співавтори",
@@ -138,7 +138,7 @@
     "toggleTheme": "Перемикати світлу/темну теми",
     "theme": "Тема",
     "personalLib": "Персональна бібліотека",
-    "excalidrawLib": "Бібліотека Excalidraw",
+    "excalidrawLib": "Бібліотека Mosaic",
     "decreaseFontSize": "Зменшити розмір шрифту",
     "increaseFontSize": "Збільшити розмір шрифту",
     "unbindText": "Відв'язати текст",
@@ -180,7 +180,7 @@
     "zoomToFitViewport": "Збільшити до розміру перегляду",
     "zoomToFitSelection": "Збільшити, щоб відповідати виділенню",
     "zoomToFit": "Збільшити, щоб умістити всі елементи",
-    "installPWA": "Встановити Excalidraw локально (PWA)",
+    "installPWA": "Встановити Mosaic локально (PWA)",
     "autoResize": "Увімкнути автоматичне змінення розміру тексту",
     "imageCropping": "Обрізка зображення",
     "unCroppedDimension": "Необрізаний розмір",
@@ -272,7 +272,7 @@
     "cannotExportEmptyCanvas": "Не вийшло експортувати пусте полотно.",
     "couldNotCopyToClipboard": "Не вдалося скопіювати до буфера обміну.",
     "decryptFailed": "Не вдалося розшифрувати дані.",
-    "uploadedSecurly": "Це завантаження було захищене наскрізним шифруванням, а це означає що сервер Excalidraw та інші не зможуть прочитати вміст.",
+    "uploadedSecurly": "Це завантаження було захищене наскрізним шифруванням, а це означає що сервер Mosaic та інші не зможуть прочитати вміст.",
     "loadSceneOverridePrompt": "Завантаження зовнішнього креслення замінить ваш наявний контент. Продовжити?",
     "collabStopOverridePrompt": "Зупинка сесії перезапише ваш попередній, локально збережений малюнок. Ви впевнені?\n\n(Якщо ви хочете зберегти локальний малюнок, просто закрийте замість нього вкладку браузера.)",
     "errorAddingToLibrary": "Не вдалося додати елемент до бібліотеки",
@@ -280,7 +280,7 @@
     "confirmAddLibrary": "Це призведе до додавання {{numShapes}} фігур до вашої бібліотеки. Ви впевнені?",
     "imageDoesNotContainScene": "Виглядає ніби зображення не містить корисної інформації. Ви увімкнули вбудовування сцени при експорті?",
     "cannotRestoreFromImage": "Сцена не може бути відновлена з цього файлу зображення",
-    "invalidSceneUrl": "Не вдалося імпортувати сцену з наданого URL. Він або недоформований, або не містить дійсних даних Excalidraw JSON.",
+    "invalidSceneUrl": "Не вдалося імпортувати сцену з наданого URL. Він або недоформований, або не містить дійсних даних Mosaic JSON.",
     "resetLibrary": "Це призведе до очищення бібліотеки. Ви впевнені?",
     "removeItemsFromsLibrary": "Видалити {{count}} елемент(ів) з бібліотеки?",
     "invalidEncryptionKey": "Ключ шифрування повинен бути довжиною до 22 символів. Спільну роботу вимкнено.",
@@ -338,7 +338,7 @@
     "bucketfill": "Заливка",
     "hand": "Рука (інструмент для панорамування)",
     "extraTools": "Інші інструменти",
-    "mermaidToExcalidraw": "Mermaid у Excalidraw",
+    "mermaidToExcalidraw": "Mermaid у Mosaic",
     "convertElementType": ""
   },
   "bucketfill": {
@@ -422,7 +422,7 @@
     "desc_inProgressIntro": "Сесія спільної роботи над кресленням триває.",
     "desc_shareLink": "Поділіться цим посиланням з будь-ким для спільної роботи:",
     "desc_exitSession": "Зупинка сесії відключить вас від кімнати, але ви зможете продовжити роботу з полотном локально. Зверніть увагу, що це не вплине на інших людей, і вони все одно зможуть працювати над їх версією.",
-    "shareTitle": "Приєднатися до сеансу спільної роботи на Excalidraw"
+    "shareTitle": "Приєднатися до сеансу спільної роботи на Mosaic"
   },
   "errorDialog": {
     "title": "Помилка"
@@ -539,8 +539,8 @@
     }
   },
   "encrypted": {
-    "tooltip": "Ваші креслення захищені наскрізним шифруванням — сервери Excalidraw ніколи їх не побачать.",
-    "link": "Допис у блозі на наскрізному шифруванні в Excalidraw"
+    "tooltip": "Ваші креслення захищені наскрізним шифруванням — сервери Mosaic ніколи їх не побачать.",
+    "link": "Допис у блозі на наскрізному шифруванні в Mosaic"
   },
   "stats": {
     "angle": "Кут",
@@ -650,9 +650,9 @@
     }
   },
   "mermaid": {
-    "title": "Mermaid у Excalidraw",
+    "title": "Mermaid у Mosaic",
     "button": "Вставити",
-    "description": "Наразі підтримуються лише діаграми типів <flowchartLink>Flowchart</flowchartLink>, <sequenceLink>Sequence</sequenceLink>, <classLink>Class</classLink> та <erdLink>Entity Relationship</erdLink>. Інші типи будуть показані в Excalidraw як зображення.",
+    "description": "Наразі підтримуються лише діаграми типів <flowchartLink>Flowchart</flowchartLink>, <sequenceLink>Sequence</sequenceLink>, <classLink>Class</classLink> та <erdLink>Entity Relationship</erdLink>. Інші типи будуть показані в Mosaic як зображення.",
     "syntax": "Синтаксис Mermaid",
     "preview": "Попередній перегляд",
     "label": "Mermaid",
