@@ -1,3 +1,5 @@
+import { BRAND_NAME } from "@mosaic/brand";
+
 import type {
   ExcalidrawElement,
   FontFamilyValues,
@@ -7,8 +9,6 @@ import type {
   AppState,
   NormalizedZoomValue,
 } from "@excalidraw/excalidraw/types";
-
-import { BRAND_NAME } from "@mosaic/brand";
 
 import { COLOR_PALETTE } from "./colors";
 

@@ -41,7 +41,9 @@ const check = (label, pattern, paths) => {
   const after = countAt(null, pattern, paths);
   const ok = before === after;
   console.log(
-    `${ok ? "OK  " : "FAIL"}  ${label.padEnd(46)} upstream=${String(before).padStart(5)}  now=${String(after).padStart(5)}`,
+    `${ok ? "OK  " : "FAIL"}  ${label.padEnd(46)} upstream=${String(
+      before,
+    ).padStart(5)}  now=${String(after).padStart(5)}`,
   );
   return ok;
 };
@@ -50,25 +52,31 @@ let allOk = true;
 
 console.log("=== INTERNAL identifiers (must be unchanged) ===\n");
 allOk =
-  check("@excalidraw/* imports (code, comments ignored)", "from \"@excalidraw/", [
-    "packages",
-    "excalidraw-app",
-  ]) && allOk;
+  check(
+    "@excalidraw/* imports (code, comments ignored)",
+    'from "@excalidraw/',
+    ["packages", "excalidraw-app"],
+  ) && allOk;
 allOk =
-  check("localStorage keys", 'excalidraw-state', ["excalidraw-app", "packages"]) &&
-  allOk;
+  check("localStorage keys", "excalidraw-state", [
+    "excalidraw-app",
+    "packages",
+  ]) && allOk;
 allOk =
   check("localStorage elements key", '"excalidraw"', [
     "excalidraw-app/app_constants.ts",
   ]) && allOk;
 allOk =
-  check("IndexedDB stores", "IDB_LIBRARY", ["excalidraw-app/app_constants.ts"]) &&
-  allOk;
+  check("IndexedDB stores", "IDB_LIBRARY", [
+    "excalidraw-app/app_constants.ts",
+  ]) && allOk;
 allOk =
   check("MIME type", "vnd.excalidraw", ["excalidraw-app", "packages"]) && allOk;
 allOk =
-  check(".excalidraw extension", '\\.excalidraw\\b', ["excalidraw-app", "packages"]) &&
-  allOk;
+  check(".excalidraw extension", "\\.excalidraw\\b", [
+    "excalidraw-app",
+    "packages",
+  ]) && allOk;
 allOk =
   check("Sentry / build globals", "EXCALIDRAW_ASSET_PATH", [
     "excalidraw-app",
@@ -78,8 +86,10 @@ allOk =
 allOk =
   check("window.name tab key", '"_excalidraw"', ["excalidraw-app"]) && allOk;
 allOk =
-  check("ExcalidrawError class", "ExcalidrawError", ["packages", "excalidraw-app"]) &&
-  allOk;
+  check("ExcalidrawError class", "ExcalidrawError", [
+    "packages",
+    "excalidraw-app",
+  ]) && allOk;
 allOk =
   check("ExcalidrawElement type", "ExcalidrawElement", [
     "packages",
@@ -89,8 +99,10 @@ allOk =
   check("CSS class names", "excalidraw-ui-", ["packages", "excalidraw-app"]) &&
   allOk;
 allOk =
-  check("workspace package names", '"@excalidraw/', ["packages", "excalidraw-app"]) &&
-  allOk;
+  check("workspace package names", '"@excalidraw/', [
+    "packages",
+    "excalidraw-app",
+  ]) && allOk;
 
 console.log("\n=== LEGAL / attribution (must be untouched) ===\n");
 for (const file of [
@@ -104,7 +116,9 @@ for (const file of [
     const diff = run(["diff", "--stat", BASE, "--", file]).trim();
     ok = diff === "";
     console.log(
-      `${ok ? "OK  " : "FAIL"}  ${file.padEnd(46)} ${diff || "(identical to upstream)"}`,
+      `${ok ? "OK  " : "FAIL"}  ${file.padEnd(46)} ${
+        diff || "(identical to upstream)"
+      }`,
     );
   } catch {
     console.log(`SKIP  ${file.padEnd(46)} (not present)`);
@@ -115,6 +129,10 @@ for (const file of [
 }
 
 console.log(
-  `\n${allOk ? "PASS - no internal identifier was renamed." : "FAIL - drift detected."}`,
+  `\n${
+    allOk
+      ? "PASS - no internal identifier was renamed."
+      : "FAIL - drift detected."
+  }`,
 );
 process.exit(allOk ? 0 : 1);

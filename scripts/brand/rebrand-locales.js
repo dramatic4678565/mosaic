@@ -30,6 +30,19 @@ const PROTECTED = ["Excalidraw+"];
 const TRANSLITERATED = ["এক্সক্যালিড্র"];
 
 /**
+ * Returns the length of a protected token starting at `index`, or 0.
+ * Extracted from the loop below to avoid a closure over the mutable index.
+ */
+const protectedLengthAt = (value, index) => {
+  for (const token of PROTECTED) {
+    if (value.startsWith(token, index)) {
+      return token.length;
+    }
+  }
+  return 0;
+};
+
+/**
  * Rewrites `Excalidraw` -> `Mosaic` outside of protected contexts.
  */
 const rewriteValue = (value) => {
@@ -40,10 +53,10 @@ const rewriteValue = (value) => {
   let result = "";
   let i = 0;
   while (i < value.length) {
-    const hit = PROTECTED.find((token) => value.startsWith(token, i));
-    if (hit) {
-      result += hit;
-      i += hit.length;
+    const protectedLength = protectedLengthAt(value, i);
+    if (protectedLength) {
+      result += value.slice(i, i + protectedLength);
+      i += protectedLength;
       continue;
     }
     if (value.startsWith("Excalidraw", i)) {

@@ -59,6 +59,12 @@
           }
         ]
       }
+    },
+    {
+      "files": ["scripts/brand/**/*.js"],
+      "rules": {
+        "no-console": "off"
+      }
     }
   ]
 }
