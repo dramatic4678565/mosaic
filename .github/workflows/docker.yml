@@ -79,18 +79,38 @@ jobs:
       - name: Smoke test the pushed image
         # Pull it back and assert both routes respond, so a broken publish is
         # caught here rather than by whoever runs it next.
+        #
+        # On failure the container's own logs are dumped: "could not connect"
+        # is otherwise indistinguishable from "nginx exited on startup" versus
+        # "nginx started but 404s", which is exactly the ambiguity that cost a
+        # debugging cycle on the first run of this workflow.
         run: |
           set -euo pipefail
           IMAGE="$(echo "${{ steps.meta.outputs.tags }}" | head -n1)"
           docker pull "$IMAGE"
-          docker run -d --name mosaic-smoke -p 8080:80 "$IMAGE"
-          # Give nginx a moment to bind.
-          for i in $(seq 1 20); do
-            if curl -fsS http://localhost:8080/ >/dev/null 2>&1; then break; fi
-            sleep 1
-          done
+          docker rm -f mosaic-smoke >/dev/null 2>&1 || true
+          docker run -d --name mosaic-smoke -p 8080:8080 "$IMAGE" >/dev/null
+
+          if ! curl -fsS http://localhost:8080/ >/dev/null 2>&1; then
+            echo "::group::container state"
+            docker ps -a --filter name=mosaic-smoke
+            echo "::endgroup::"
+            echo "::group::container logs"
+            docker logs mosaic-smoke 2>&1 || true
+            echo "::endgroup::"
+            docker rm -f mosaic-smoke >/dev/null 2>&1 || true
+            echo "::error::container did not serve on :8080"
+            exit 1
+          fi
+
           echo "--- / (dashboard) ---"
           curl -fsS http://localhost:8080/ | grep -o "<title>[^<]*</title>"
           echo "--- /app/ (editor) ---"
           curl -fsS http://localhost:8080/app/ | grep -o "<title>[^<]*</title>"
-          docker rm -f mosaic-smoke
+          # A hashed asset must be reachable; a 404 here is the silent failure
+          # mode where the shell renders but the app never boots.
+          ASSET="$(curl -fsS http://localhost:8080/app/ | grep -o '/app/assets/index-[^"]*\.js' | head -n1)"
+          test -n "$ASSET"
+          curl -fsS -o /dev/null -w "asset %{http_code}\n" "http://localhost:8080$ASSET"
+
+          docker rm -f mosaic-smoke >/dev/null

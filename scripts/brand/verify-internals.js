@@ -8,6 +8,27 @@ import { execFileSync } from "child_process";
 
 const BASE = "upstream/master";
 
+/**
+ * Fail fast, and legibly, when the baseline ref is missing.
+ *
+ * `git grep <unknown-rev>` exits 128 with "unable to resolve revision". Without
+ * this check that surfaces as an opaque child-process error and looks like a
+ * rebrand failure. A shallow CI checkout with only `origin` configured is the
+ * usual cause.
+ */
+try {
+  run(["rev-parse", "--verify", BASE]);
+} catch {
+  console.error(
+    `\nBaseline ref "${BASE}" is not available in this checkout.\n` +
+      "This guard compares the working tree against upstream to prove no\n" +
+      "internal identifier was renamed, so it needs that ref:\n\n" +
+      "  git remote add upstream https://github.com/excalidraw/excalidraw.git\n" +
+      "  git fetch --depth=1 upstream master\n",
+  );
+  process.exit(1);
+}
+
 const run = (args) =>
   execFileSync("git", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
 

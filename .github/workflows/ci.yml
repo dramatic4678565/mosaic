@@ -47,6 +47,16 @@ jobs:
           node-version: 20
           cache: yarn
 
+      - name: Fetch upstream for the rebrand guard
+        # `verify:brand` diffs against `upstream/master`, and the default
+        # checkout is depth 1 with only `origin` configured — so the ref does
+        # not exist and `git grep` exits 128 with "unable to resolve revision",
+        # which reads like a rebrand failure but is a missing ref.
+        run: |
+          git remote add upstream https://github.com/excalidraw/excalidraw.git
+          git fetch --depth=1 upstream master
+          git rev-parse --verify upstream/master
+
       # Restore the dependency cache directly as well. setup-node's `cache:
       # yarn` only caches the yarn *downloads*, not `node_modules`, so without
       # this the install re-links ~1.5k packages on every run.
