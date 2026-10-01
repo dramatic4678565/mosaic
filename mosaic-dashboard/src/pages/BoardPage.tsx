@@ -106,7 +106,16 @@ export const BoardPage = () => {
 
   return (
     <div
-      style={{ display: "flex", flexDirection: "column", height: "100%" }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        // `height: 100%` alone chains through two flex ancestors and is
+        // fragile: when it resolves to 0 the editor measures a zero-height
+        // iframe, sizes its canvas to 0, and never recovers. The explicit
+        // min-height guarantees the editor always has a viewport to lay out in.
+        height: "100%",
+        minHeight: 520,
+      }}
       data-testid="board-page"
     >
       <div
@@ -157,6 +166,10 @@ export const BoardPage = () => {
         style={{
           flex: 1,
           width: "100%",
+          // Same reasoning as the container above: never let the editor's
+          // viewport resolve to 0, or its canvas is sized to 0 and stays that
+          // way even after the layout settles.
+          minHeight: 480,
           border: "1px solid #e3e7ef",
           borderRadius: 12,
         }}
@@ -176,20 +189,32 @@ export const BoardPage = () => {
  * render before its first autosave. Prod: the editor is served from `/`, so a
  * relative `/#board=<id>` works under the same nginx.
  */
+/**
+ * Builds the editor URL.
+ *
+ * Always a same-origin relative path. That is load-bearing, not cosmetic:
+ * IndexedDB is partitioned per origin and board mode reads scenes straight out
+ * of the dashboard's database, so if the editor ended up on another origin it
+ * would open an empty board every single time.
+ *
+ * The mount point comes from VITE_EDITOR_BASE:
+ *  - production (Docker/nginx): the editor is served at `/app/`
+ *  - dev / e2e: the static preview server mounts it at `/editor/`
+ *
+ * Reading it from one place rather than hard-coding it is what stops the two
+ * deployments from drifting: a wrong path here is a blank iframe with no error.
+ *
+ * The scene is NOT passed in the URL. The editor hydrates from IndexedDB
+ * itself; embedding a possibly multi-megabyte scene in the fragment bloats the
+ * URL, leaks board content into browser history, and complicates hydration
+ * precedence (which of URL vs DB wins?). One source.
+ */
+const EDITOR_BASE = (
+  (import.meta.env.VITE_EDITOR_BASE as string | undefined) ?? "/app/"
+).replace(/\/$/, "");
+
 const buildEditorUrl = (boardId: string) => {
-  // Always a same-origin relative path, in dev as well as production.
-  //
-  // In dev, `vite.config.mts` proxies `/editor` to the editor's own dev server,
-  // so the iframe lands on the dashboard's origin. That is load-bearing, not
-  // cosmetic: IndexedDB is partitioned per origin and board mode reads scenes
-  // straight out of the dashboard's database, so across two ports the editor
-  // would open an empty board every single time.
-  //
-  // The scene is NOT passed in the URL. The editor hydrates from IndexedDB
-  // itself in board mode; embedding a (possibly multi-megabyte) scene in the
-  // fragment bloats the URL, leaks board content into browser history, and
-  // complicates hydration precedence (which of URL vs DB wins?). One source.
   const params = new URLSearchParams();
   params.set("board", boardId);
-  return `/editor/#${params.toString()}`;
+  return `${EDITOR_BASE}/#${params.toString()}`;
 };
