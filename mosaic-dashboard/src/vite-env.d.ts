@@ -20,8 +20,14 @@ declare module "*.module.css" {
 declare module "*.scss";
 
 interface ImportMetaEnv {
-  readonly VITE_EDITOR_URL?: string;
+  /**
+   * Where the editor is mounted relative to this app's origin.
+   * Defaults to "/app/" (the nginx layout in Dockerfile / docker/nginx.conf).
+   * The e2e suite overrides it to "/editor/" via `.env.e2e`.
+   */
+  readonly VITE_EDITOR_BASE?: string;
   readonly VITE_APP_PORT?: string;
+  readonly BASE_URL?: string;
 }
 
 interface ImportMeta {
