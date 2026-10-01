@@ -1,0 +1,35 @@
+@use "../../styles/tokens" as t;
+
+.shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  font-family: t.$font-ui;
+  color: t.$color-text;
+  background: t.$color-surface;
+}
+
+.shell__main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: t.$color-surface;
+}
+
+.shell__content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: t.$space-lg;
+}
+
+.globalError {
+  position: fixed;
+  inset: auto t.$space-md t.$space-md;
+  padding: t.$space-sm t.$space-md;
+  border-radius: t.$radius-md;
+  background: t.$color-danger-bg;
+  color: t.$color-danger-text;
+  box-shadow: t.$shadow-md;
+  z-index: 100;
+}

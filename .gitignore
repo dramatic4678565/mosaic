@@ -27,3 +27,12 @@ dev-dist
 html
 meta*.json
 .claude
+# Playwright (mosaic-dashboard) artifacts.
+# These are generated on every run and are not source.
+mosaic-dashboard/test-results
+mosaic-dashboard/playwright-report
+mosaic-dashboard/blob-report
+mosaic-dashboard/.playwright
+# Playwright's HTML report bundles node_modules; the symlinked node_modules
+# directories it creates must never be committed.
+mosaic-dashboard/node_modules

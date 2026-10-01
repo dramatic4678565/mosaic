@@ -1,0 +1,173 @@
+@use "../../styles/tokens" as t;
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid t.$color-border;
+  border-radius: t.$radius-lg;
+  background: t.$color-surface;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.14s ease, border-color 0.14s ease,
+    transform 0.14s ease;
+
+  &:hover {
+    border-color: t.$color-border-strong;
+    box-shadow: t.$shadow-md;
+  }
+
+  &.isSelected {
+    border-color: t.$color-primary;
+    box-shadow: 0 0 0 2px t.$color-primary-soft;
+  }
+
+  &.isDragging {
+    opacity: 0.45;
+  }
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: t.$color-surface-sunken;
+  border-bottom: 1px solid t.$color-border;
+  overflow: hidden;
+}
+
+.thumb__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumb__placeholder {
+  color: t.$color-text-faint;
+  font-size: 12px;
+}
+
+.selectBox {
+  position: absolute;
+  top: t.$space-sm;
+  left: t.$space-sm;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  border: 1.5px solid t.$color-border-strong;
+  background: rgba(255, 255, 255, 0.92);
+  color: transparent;
+  font-size: 12px;
+  font-weight: 700;
+
+  &.isChecked {
+    background: t.$color-primary;
+    border-color: t.$color-primary;
+    color: t.$color-text-inverse;
+  }
+}
+
+.star {
+  position: absolute;
+  top: t.$space-sm;
+  right: t.$space-sm;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  line-height: 1;
+  color: t.$color-text-faint;
+
+  &.isFavorite {
+    color: t.$color-warning;
+  }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: t.$space-md;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+  color: t.$color-text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nameInput {
+  width: 100%;
+  padding: 3px 6px;
+  border: 1px solid t.$color-primary;
+  border-radius: t.$radius-sm;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: t.$space-sm;
+  font-size: 12px;
+  color: t.$color-text-faint;
+}
+
+.statsChip {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: t.$color-surface-sunken;
+  color: t.$color-text-muted;
+}
+
+/*
+ * The "..." button is always visible, not revealed on `:hover`.
+ *
+ * Two reasons, both practical:
+ * - a hover-only control is unusable on a touchscreen and unreachable by keyboard;
+ * - a `display: none` / `opacity: 0` control cannot be reliably clicked by
+ *   automation (it is considered hidden, and forcing a click dispatches at the
+ *   coordinates and lands on whatever is underneath — here, the card, which then
+ *   toggles selection instead of opening the menu).
+ *
+ * It is styled to stay out of the way (small, low-contrast) and darkens on hover,
+ * which gives the same affordance honestly.
+ */
+.menuButton {
+  position: absolute;
+  top: t.$space-sm;
+  right: 40px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.86);
+  font-size: 15px;
+  line-height: 1;
+  color: t.$color-text-faint;
+  transition: color 0.12s ease, background 0.12s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: t.$color-text;
+    background: t.$color-surface;
+  }
+}

@@ -149,6 +149,14 @@ import "./index.scss";
 import { ExcalidrawPlusPromoBanner } from "./components/ExcalidrawPlusPromoBanner";
 import { AppSidebar } from "./components/AppSidebar";
 
+import {
+  getBoardIdFromHash,
+  markBoardOpened,
+  parseStoredScene,
+  readBoardRecord,
+  startBoardAutosave,
+} from "./boardMode";
+
 import type { CollabAPI } from "./collab/Collab";
 
 polyfill();
@@ -194,7 +202,19 @@ if (window.self !== window.top) {
     const parentUrl = new URL(document.referrer);
     const currentUrl = new URL(window.location.href);
     if (parentUrl.origin === currentUrl.origin) {
-      isSelfEmbedding = true;
+      // Upstream's guard: refuse to embed this editor inside a page served from
+      // its own origin. The threat is a *scene* embedding the editor to attack a
+      // viewer (clickjacking / self-XSS), so the block applies to arbitrary
+      // same-origin parents.
+      //
+      // Board mode (Part 2, STEP 6) is a deliberate exception: the Mosaic
+      // dashboard is first-party code that embeds the editor under `#board=<id>`
+      // precisely so the two can share one IndexedDB. It is not user-authored
+      // content, so the threat model does not apply. The exemption is scoped to
+      // the board hash only — every other same-origin embed stays blocked, and
+      // cross-origin embeds (the embeddable use case) are unaffected.
+      const isBoardMode = getBoardIdFromHash() !== null;
+      isSelfEmbedding = !isBoardMode;
     }
   } catch (error) {
     // ignore
@@ -560,6 +580,57 @@ const ExcalidrawWrapper = () => {
   useEffect(() => {
     if (!excalidrawAPI || (!isCollabDisabled && !collabAPI)) {
       return;
+    }
+
+    // Mosaic dashboard "board mode" (Part 2, STEP 6).
+    //
+    // Runs BEFORE initializeScene and returns early when active, so the editor's
+    // normal localStorage/share-link/collab initialisation is never reached in
+    // this mode — and, just as importantly, is untouched when it is not.
+    const boardId = getBoardIdFromHash();
+    if (boardId) {
+      let cancelled = false;
+      let disposeAutosave: (() => void) | undefined;
+
+      void (async () => {
+        try {
+          const record = await readBoardRecord(boardId);
+          if (cancelled) {
+            return;
+          }
+          const stored = parseStoredScene(record?.scene);
+
+          initialStatePromiseRef.current.promise.resolve(
+            stored
+              ? {
+                  elements: restoreElements(stored.elements as any, null, {
+                    repairBindings: true,
+                    deleteInvisibleElements: true,
+                  }),
+                  appState: restoreAppState(stored.appState as any, null),
+                  ...(stored.files ? { files: stored.files as any } : {}),
+                }
+              : null,
+          );
+
+          await markBoardOpened(boardId);
+          if (!cancelled) {
+            disposeAutosave = startBoardAutosave(boardId, excalidrawAPI);
+          }
+        } catch (error) {
+          // Board mode is an add-on; a failure here must not blank the editor.
+          // Fall back to an empty canvas and keep the editor usable, then always
+          // resolve the initial-data promise — leaving it pending would leave the
+          // editor permanently blank with no error surfaced anywhere.
+          console.error("[mosaic] failed to load board", boardId, error);
+          initialStatePromiseRef.current.promise.resolve(null);
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+        disposeAutosave?.();
+      };
     }
 
     initializeScene({ collabAPI, excalidrawAPI }).then(async (data) => {

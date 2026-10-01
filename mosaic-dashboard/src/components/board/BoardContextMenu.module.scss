@@ -1,0 +1,45 @@
+@use "../../styles/tokens" as t;
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: t.$space-sm;
+  width: 100%;
+  padding: t.$space-sm t.$space-md;
+  border: none;
+  border-radius: t.$radius-sm;
+  background: transparent;
+  font-size: 13px;
+  text-align: left;
+  color: t.$color-text;
+
+  &:hover {
+    background: t.$color-surface-sunken;
+  }
+
+  &.isDanger {
+    color: t.$color-danger;
+
+    &:hover {
+      background: t.$color-danger-bg;
+    }
+  }
+}
+
+.separator {
+  height: 1px;
+  margin: t.$space-xs 0;
+  background: t.$color-border;
+}
+
+.submenu {
+  padding: 2px 0 2px t.$space-md;
+  margin: 2px 0 2px t.$space-md;
+  border-left: 2px solid t.$color-border;
+}
+
+.submenuEmpty {
+  padding: t.$space-xs t.$space-md;
+  font-size: 12px;
+  color: t.$color-text-faint;
+}

@@ -1,0 +1,145 @@
+@use "../../styles/tokens" as t;
+
+.sidebar {
+  width: t.$sidebar-width;
+  flex: 0 0 t.$sidebar-width;
+  display: flex;
+  flex-direction: column;
+  gap: t.$space-md;
+  padding: t.$space-lg t.$space-md;
+  border-right: 1px solid t.$color-border;
+  background: t.$color-surface-raised;
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: t.$space-sm;
+  padding: t.$space-xs t.$space-sm;
+  font-weight: 700;
+  font-size: 17px;
+  color: t.$color-text;
+}
+
+.brand__mark {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: t.$space-sm;
+  padding: t.$space-sm t.$space-md;
+  border-radius: t.$radius-sm;
+  color: t.$color-text-muted;
+  font-size: 14px;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  &:hover {
+    background: t.$color-surface-sunken;
+    color: t.$color-text;
+  }
+
+  &.isActive {
+    background: t.$color-primary-soft;
+    color: t.$color-primary;
+    font-weight: 600;
+  }
+
+  /* Board card is hovering over this folder: highlight as a drop target. */
+  &.isDropTarget {
+    background: t.$color-primary-soft;
+    box-shadow: inset 0 0 0 2px t.$color-primary;
+  }
+}
+
+.navItem__count {
+  margin-left: auto;
+  font-size: 12px;
+  color: t.$color-text-faint;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: t.$space-sm t.$space-md t.$space-xs;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: t.$color-text-faint;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: t.$radius-sm;
+  background: transparent;
+  color: t.$color-text-muted;
+
+  &:hover {
+    background: t.$color-surface-sunken;
+    color: t.$color-text;
+  }
+}
+
+.folderDot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 3px;
+}
+
+.newBoard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: t.$space-sm;
+  width: 100%;
+  padding: t.$space-sm;
+  border: none;
+  border-radius: t.$radius-sm;
+  background: t.$color-primary;
+  color: t.$color-text-inverse;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: t.$color-primary-hover;
+  }
+}
+
+.newFolderInput {
+  margin: t.$space-xs t.$space-sm;
+  padding: t.$space-xs t.$space-sm;
+  border: 1px solid t.$color-border-strong;
+  border-radius: t.$radius-sm;
+  background: t.$color-surface;
+  font-size: 13px;
+  outline: none;
+
+  &:focus {
+    border-color: t.$color-primary;
+  }
+}
