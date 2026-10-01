@@ -34,9 +34,10 @@
       "@excalidraw/math": ["./packages/math/src/index.ts"],
       "@excalidraw/math/*": ["./packages/math/src/*"],
       "@excalidraw/utils": ["./packages/utils/src/index.ts"],
-      "@excalidraw/utils/*": ["./packages/utils/src/*"]
+      "@excalidraw/utils/*": ["./packages/utils/src/*"],
+      "@/*": ["./mosaic-dashboard/src/*"]
     }
   },
-  "include": ["packages", "excalidraw-app"],
-  "exclude": ["examples", "dist", "types", "tests"]
+  "include": ["packages", "excalidraw-app", "mosaic-dashboard/src"],
+  "exclude": ["examples", "dist", "types", "tests", "**/e2e"]
 }
