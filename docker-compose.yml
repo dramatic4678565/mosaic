@@ -1,23 +1,28 @@
+# Local development with Docker.
+#
+#   docker compose up --build   -> http://localhost:8080
+#
+# Serves both apps from one origin, which is required: the dashboard embeds the
+# editor and both read the same IndexedDB, and IndexedDB is partitioned per
+# origin.
+
 services:
-  excalidraw:
+  mosaic:
     build:
       context: .
+      dockerfile: Dockerfile
       args:
-        - NODE_ENV=development
-    container_name: excalidraw
+        NODE_ENV: production
+    image: ghcr.io/dramatic4678565/mosaic:latest
+    container_name: mosaic
     ports:
-      - "3000:80"
-    restart: on-failure
-    stdin_open: true
+      # 8080 on the host, because the editor's own dev tooling defaults to 8080
+      # elsewhere and 8080 is the port documented in the README.
+      - "8080:80"
+    restart: unless-stopped
     healthcheck:
-      disable: true
-    environment:
-      - NODE_ENV=development
-    volumes:
-      - ./:/opt/node_app/app:delegated
-      - ./package.json:/opt/node_app/package.json
-      - ./yarn.lock:/opt/node_app/yarn.lock
-      - notused:/opt/node_app/app/node_modules
-
-volumes:
-  notused:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

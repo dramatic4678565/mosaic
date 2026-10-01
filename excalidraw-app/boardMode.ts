@@ -144,15 +144,37 @@ export const markBoardOpened = async (boardId: string): Promise<void> => {
   await writeBoardRecord(boardId, { lastOpenedAt: Date.now() });
 };
 
-/** Serialises the live scene into the JSON string the dashboard stores. */
-export const serializeScene = (api: ExcalidrawImperativeAPI): string =>
-  JSON.stringify({
+/**
+ * Serialises the live scene into the JSON string the dashboard stores.
+ *
+ * `appState.collaborators` is a `Map` at runtime but JSON.stringify turns a Map
+ * into `{}` and leaves behind a value that is not a Map. On rehydrate that value
+ * then breaks anything calling `.forEach` / `.size` on it
+ * (`e.appState.collaborators.forEach is not a function`). We do not persist
+ * collaborators — they are ephemeral presence state tied to a live socket, not
+ * scene content — so the field is dropped explicitly rather than left as a
+ * corrupt `{}`.
+ */
+export const serializeScene = (api: ExcalidrawImperativeAPI): string => {
+  const { collaborators: _collaborators, ...appState } = api.getAppState();
+  return JSON.stringify({
     elements: api.getSceneElements(),
-    appState: api.getAppState(),
+    appState,
     files: api.getFiles(),
   });
+};
 
-/** Parses a stored scene string, tolerating malformed/legacy content. */
+/**
+ * Parses a stored scene string, tolerating malformed/legacy content.
+ *
+ * Also normalises `appState.collaborators`: it is a `Map` in the editor but was
+ * written as JSON, so a scene saved by an older build (or one where the field
+ * was not stripped) can arrive as `{}`, `[]` or a string. Handing a non-Map to
+ * the editor crashes it on first render. We drop the field entirely —
+ * collaborators are ephemeral socket presence and must not be restored from a
+ * stored scene anyway — and let `restoreAppState` reinstate a fresh empty Map
+ * from its defaults.
+ */
 export const parseStoredScene = (
   raw: string | undefined,
 ): StoredScene | null => {
@@ -162,7 +184,9 @@ export const parseStoredScene = (
   try {
     const parsed = JSON.parse(raw);
     if (parsed && Array.isArray(parsed.elements)) {
-      return parsed as StoredScene;
+      const appState = { ...(parsed.appState ?? {}) };
+      delete appState.collaborators;
+      return { ...parsed, appState } as StoredScene;
     }
     return null;
   } catch {
@@ -329,8 +353,10 @@ export const startBoardAutosave = (
 /**
  * URL for the "back to dashboard" control.
  *
- * The dashboard is a sibling app under `/dashboard/` in production and a separate
- * dev server in development, so the base is overridable via `VITE_DASHBOARD_URL`.
+ * In the Docker/nginx deployment the dashboard *is* the root (`/` serves
+ * mosaic-dashboard and `/app/` serves this editor), so `/` is correct. The
+ * `VITE_DASHBOARD_URL` override exists for deployments that mount the dashboard
+ * under a sub-path.
  */
 export const dashboardUrl = (): string =>
-  (import.meta.env.VITE_DASHBOARD_URL as string | undefined) ?? "/dashboard";
+  (import.meta.env.VITE_DASHBOARD_URL as string | undefined) ?? "/";
