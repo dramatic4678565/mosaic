@@ -9,6 +9,7 @@ import {
   capitalizeString,
   isShallowEqual,
 } from "@excalidraw/common";
+import { BRAND_LINKS_GROUP_TITLE } from "@mosaic/brand";
 
 import { getColorUpdate, mutateElement } from "@excalidraw/element";
 
@@ -125,7 +126,7 @@ const DefaultMainMenu: React.FC<{
       <MainMenu.DefaultItems.Help />
       <MainMenu.DefaultItems.ClearCanvas />
       <MainMenu.Separator />
-      <MainMenu.Group title="Excalidraw links">
+      <MainMenu.Group title={BRAND_LINKS_GROUP_TITLE}>
         <MainMenu.DefaultItems.Socials />
       </MainMenu.Group>
       <MainMenu.Separator />

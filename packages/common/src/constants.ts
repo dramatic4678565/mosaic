@@ -1,3 +1,5 @@
+import { BRAND_NAME } from "@mosaic/brand";
+
 import type {
   ExcalidrawElement,
   FontFamilyValues,
@@ -15,7 +17,11 @@ export { DEFAULT_STICKY_NOTE_BG } from "./colors";
 export const supportsResizeObserver =
   typeof window !== "undefined" && "ResizeObserver" in window;
 
-export const APP_NAME = "Excalidraw";
+/**
+ * Used as the `history.replaceState` title, which browsers surface in the
+ * window/tab title of restored history entries — so it is user-visible.
+ */
+export const APP_NAME = BRAND_NAME;
 
 // distance when creating text before it's considered `autoResize: false`
 // we're using higher threshold so that clicks that end up being drags

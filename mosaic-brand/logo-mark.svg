@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110" width="110" height="110" role="img" aria-label="Mosaic">
+  <title>Mosaic</title>
+  <rect x="8" y="8" width="42" height="42" rx="11" fill="#3977df"/>
+  <rect x="60" y="8" width="42" height="42" rx="11" fill="#91b2f6"/>
+  <rect x="8" y="60" width="42" height="42" rx="11" fill="#759dec"/>
+  <rect x="60" y="60" width="42" height="42" rx="11" fill="#d4e1fc"/>
+</svg>

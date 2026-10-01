@@ -12,6 +12,7 @@ const getConfig = (outdir) => ({
   assetNames: "[dir]/[name]",
   alias: {
     "@excalidraw/utils": path.resolve(__dirname, "../packages/utils/src"),
+    "@mosaic/brand": path.resolve(__dirname, "../packages/mosaic-brand/src"),
   },
   external: [
     "@excalidraw/common",

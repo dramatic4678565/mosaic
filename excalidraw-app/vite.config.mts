@@ -24,6 +24,17 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: [
         {
+          find: /^@mosaic\/brand$/,
+          replacement: path.resolve(
+            __dirname,
+            "../packages/mosaic-brand/src/index.ts",
+          ),
+        },
+        {
+          find: /^@mosaic\/brand\/(.*?)/,
+          replacement: path.resolve(__dirname, "../packages/mosaic-brand/src/$1"),
+        },
+        {
           find: /^@excalidraw\/common$/,
           replacement: path.resolve(
             __dirname,
@@ -226,10 +237,10 @@ export default defineConfig(({ mode }) => {
           maximumFileSizeToCacheInBytes: 2.3 * 1024 ** 2, // 2.3MB
         },
         manifest: {
-          short_name: "Excalidraw",
-          name: "Excalidraw",
+          short_name: "Mosaic",
+          name: "Mosaic",
           description:
-            "Excalidraw is a whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them.",
+            "Mosaic is a whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them.",
           icons: [
             {
               src: "android-chrome-192x192.png",

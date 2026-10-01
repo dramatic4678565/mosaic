@@ -72,7 +72,7 @@
     "arrowtype_elbowed": "Flecha de codo",
     "fontSize": "Tamaño de la fuente",
     "fontFamily": "Tipo de fuente",
-    "addWatermark": "Agregar \"Hecho con Excalidraw\"",
+    "addWatermark": "Agregar \"Hecho con Mosaic\"",
     "handDrawn": "Dibujado a mano",
     "normal": "Normal",
     "code": "Código",
@@ -107,7 +107,7 @@
     "untitled": "Sin título",
     "name": "Nombre",
     "yourName": "Tu nombre",
-    "madeWithExcalidraw": "Hecho con Excalidraw",
+    "madeWithExcalidraw": "Hecho con Mosaic",
     "group": "Agrupar selección",
     "ungroup": "No agrupar selección",
     "collaborators": "Colaboradores",
@@ -138,7 +138,7 @@
     "toggleTheme": "Cambiar tema claro/oscuro",
     "theme": "Tema",
     "personalLib": "Biblioteca personal",
-    "excalidrawLib": "Biblioteca Excalidraw",
+    "excalidrawLib": "Biblioteca Mosaic",
     "decreaseFontSize": "Disminuir tamaño de letra",
     "increaseFontSize": "Aumentar el tamaño de letra",
     "unbindText": "Desvincular texto",
@@ -180,7 +180,7 @@
     "zoomToFitViewport": "Zoom para encajar en la ventana",
     "zoomToFitSelection": "Zoom para ajustar la selección",
     "zoomToFit": "Zoom para mostrar todos los elementos",
-    "installPWA": "Instalar Excalidraw localmente (PWA)",
+    "installPWA": "Instalar Mosaic localmente (PWA)",
     "autoResize": "Activar redimensionado automático de texto",
     "imageCropping": "Recortar imagen",
     "unCroppedDimension": "Dimensión no recortada",
@@ -272,7 +272,7 @@
     "cannotExportEmptyCanvas": "No se puede exportar un lienzo vacío.",
     "couldNotCopyToClipboard": "No se pudo copiar al portapapeles.",
     "decryptFailed": "No se pudieron descifrar los datos.",
-    "uploadedSecurly": "La carga ha sido asegurada con cifrado de principio a fin, lo que significa que el servidor de Excalidraw y terceros no pueden leer el contenido.",
+    "uploadedSecurly": "La carga ha sido asegurada con cifrado de principio a fin, lo que significa que el servidor de Mosaic y terceros no pueden leer el contenido.",
     "loadSceneOverridePrompt": "Si carga este dibujo externo, reemplazará el que tiene. ¿Desea continuar?",
     "collabStopOverridePrompt": "Detener la sesión sobrescribirá su dibujo anterior almacenado localmente. ¿Está seguro?\n\n(Si desea mantener su dibujo local, simplemente cierre la pestaña del navegador.)",
     "errorAddingToLibrary": "No se pudo agregar el elemento a la biblioteca",
@@ -280,7 +280,7 @@
     "confirmAddLibrary": "Esto añadirá {{numShapes}} forma(s) a tu biblioteca. ¿Estás seguro?",
     "imageDoesNotContainScene": "Esta imagen no parece contener datos de escena. ¿Ha habilitado la inserción de la escena durante la exportación?",
     "cannotRestoreFromImage": "No se pudo restaurar la escena desde este archivo de imagen",
-    "invalidSceneUrl": "No se ha podido importar la escena desde la URL proporcionada. Está mal formada, o no contiene datos de Excalidraw JSON válidos.",
+    "invalidSceneUrl": "No se ha podido importar la escena desde la URL proporcionada. Está mal formada, o no contiene datos de Mosaic JSON válidos.",
     "resetLibrary": "Esto borrará tu biblioteca. ¿Estás seguro?",
     "removeItemsFromsLibrary": "¿Eliminar {{count}} elemento(s) de la biblioteca?",
     "invalidEncryptionKey": "La clave de cifrado debe tener 22 caracteres. La colaboración en vivo está deshabilitada.",
@@ -338,7 +338,7 @@
     "bucketfill": "",
     "hand": "Mano (herramienta de panorama)",
     "extraTools": "Más herramientas",
-    "mermaidToExcalidraw": "Mermaid a Excalidraw",
+    "mermaidToExcalidraw": "Mermaid a Mosaic",
     "convertElementType": "Cambiar tipo de forma"
   },
   "bucketfill": {
@@ -422,7 +422,7 @@
     "desc_inProgressIntro": "La sesión de colaboración en vivo está ahora en progreso.",
     "desc_shareLink": "Comparte este enlace con cualquier persona con quien quieras colaborar:",
     "desc_exitSession": "Detener la sesión te desconectará de la sala, pero podrás seguir trabajando con la escena en su computadora, esto es de modo local. Ten en cuenta que esto no afectará a otras personas, y que las mismas seguirán siendo capaces de colaborar en tu escena.",
-    "shareTitle": "Únase a una sesión colaborativa en vivo en Excalidraw"
+    "shareTitle": "Únase a una sesión colaborativa en vivo en Mosaic"
   },
   "errorDialog": {
     "title": "Error"
@@ -539,7 +539,7 @@
     }
   },
   "encrypted": {
-    "tooltip": "Tus dibujos están cifrados de punto a punto, por lo que los servidores de Excalidraw nunca los verán.",
+    "tooltip": "Tus dibujos están cifrados de punto a punto, por lo que los servidores de Mosaic nunca los verán.",
     "link": "Entrada en el blog sobre cifrado de extremo a extremo"
   },
   "stats": {
@@ -650,9 +650,9 @@
     }
   },
   "mermaid": {
-    "title": "Mermaid a Excalidraw",
+    "title": "Mermaid a Mosaic",
     "button": "Insertar",
-    "description": "Actualmente solo se admiten los diagramas de <flowchartLink>Flujo</flowchartLink>, <sequenceLink>Secuencia</sequenceLink>, <classLink>Clase</classLink> y <erdLink>Entidad-Relación</erdLink>. Los demás tipos se renderizarán como imagen en Excalidraw.",
+    "description": "Actualmente solo se admiten los diagramas de <flowchartLink>Flujo</flowchartLink>, <sequenceLink>Secuencia</sequenceLink>, <classLink>Clase</classLink> y <erdLink>Entidad-Relación</erdLink>. Los demás tipos se renderizarán como imagen en Mosaic.",
     "syntax": "Sintaxis Mermaid",
     "preview": "Vista previa",
     "label": "Mermaid",

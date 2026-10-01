@@ -11,6 +11,8 @@
     "jsx": "react-jsx",
     "emitDeclarationOnly": true,
     "paths": {
+      "@mosaic/brand": ["./mosaic-brand/src/index.ts"],
+      "@mosaic/brand/*": ["./mosaic-brand/src/*"],
       "@excalidraw/common": ["./common/src/index.ts"],
       "@excalidraw/common/*": ["./common/src/*"],
       "@excalidraw/element": ["./element/src/index.ts"],

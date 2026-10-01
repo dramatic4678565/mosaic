@@ -72,7 +72,7 @@
     "arrowtype_elbowed": "Łamana strzałka",
     "fontSize": "Rozmiar tekstu",
     "fontFamily": "Krój pisma",
-    "addWatermark": "Dodaj \"Zrobione w Excalidraw\"",
+    "addWatermark": "Dodaj \"Zrobione w Mosaic\"",
     "handDrawn": "Odręczny",
     "normal": "Normalny",
     "code": "Kod",
@@ -107,7 +107,7 @@
     "untitled": "Bez tytułu",
     "name": "Nazwa",
     "yourName": "Twoje imię",
-    "madeWithExcalidraw": "Zrobione w Excalidraw",
+    "madeWithExcalidraw": "Zrobione w Mosaic",
     "group": "Zgrupuj wybrane",
     "ungroup": "Rozgrupuj wybrane",
     "collaborators": "Współtwórcy",
@@ -138,7 +138,7 @@
     "toggleTheme": "Przełącz motyw jasny / ciemny",
     "theme": "Motyw",
     "personalLib": "Biblioteka prywatna",
-    "excalidrawLib": "Biblioteka Excalidraw",
+    "excalidrawLib": "Biblioteka Mosaic",
     "decreaseFontSize": "Zmniejsz rozmiar czcionki",
     "increaseFontSize": "Zwiększ rozmiar czcionki",
     "unbindText": "Odłącz tekst od kontenera",
@@ -180,7 +180,7 @@
     "zoomToFitViewport": "Dopasuj widok do ekranu",
     "zoomToFitSelection": "Dopasuj widok do zaznaczenia",
     "zoomToFit": "Dopasuj widok do całej zawartości",
-    "installPWA": "Zainstaluj Excalidraw lokalnie (PWA)",
+    "installPWA": "Zainstaluj Mosaic lokalnie (PWA)",
     "autoResize": "Włącz automatyczne zmiany rozmiaru tekstu",
     "imageCropping": "Przycinanie obrazu",
     "unCroppedDimension": "Nieprzycięty wymiar",
@@ -280,7 +280,7 @@
     "confirmAddLibrary": "To doda {{numShapes}} kształtów do twojej biblioteki. Jesteś pewien?",
     "imageDoesNotContainScene": "Ten obraz nie zawiera żadnych informacji o scenie. Czy włączyłeś osadzanie sceny podczas eksportu?",
     "cannotRestoreFromImage": "Scena nie mogła zostać przywrócona z pliku obrazu",
-    "invalidSceneUrl": "Nie udało się zaimportować sceny z podanego adresu URL. Jest ona wadliwa lub nie zawiera poprawnych danych Excalidraw w formacie JSON.",
+    "invalidSceneUrl": "Nie udało się zaimportować sceny z podanego adresu URL. Jest ona wadliwa lub nie zawiera poprawnych danych Mosaic w formacie JSON.",
     "resetLibrary": "To wyczyści twoją bibliotekę. Jesteś pewien?",
     "removeItemsFromsLibrary": "Usunąć {{count}} element(ów) z biblioteki?",
     "invalidEncryptionKey": "Klucz szyfrowania musi składać się z 22 znaków. Współpraca na żywo jest wyłączona.",
@@ -338,7 +338,7 @@
     "bucketfill": "",
     "hand": "Ręka (narzędzie do przesuwania)",
     "extraTools": "Więcej narzędzi",
-    "mermaidToExcalidraw": "Konwertuj diagram Mermaid do Excalidraw",
+    "mermaidToExcalidraw": "Konwertuj diagram Mermaid do Mosaic",
     "convertElementType": "Przełącz typ kształtu"
   },
   "bucketfill": {
@@ -422,7 +422,7 @@
     "desc_inProgressIntro": "Sesja współpracy na żywo właśnie się rozpoczęła.",
     "desc_shareLink": "Udostępnij ten link osobom, z którymi chcesz współpracować:",
     "desc_exitSession": "Zakończenie sesji spowoduje odłączenie ciebie od pokoju, ale nadal będziesz mógł lokalnie kontynuować pracę. Zauważ, że osoby z którymi współpracowałeś nadal będą mogły współpracować.",
-    "shareTitle": "Dołącz do sesji współpracy na żywo w Excalidraw"
+    "shareTitle": "Dołącz do sesji współpracy na żywo w Mosaic"
   },
   "errorDialog": {
     "title": "Wystąpił błąd"
@@ -539,8 +539,8 @@
     }
   },
   "encrypted": {
-    "tooltip": "Twoje rysunki są zabezpieczone szyfrowaniem end-to-end, tak więc nawet w Excalidraw nie jesteśmy w stanie zobaczyć tego co tworzysz.",
-    "link": "Wpis na blogu dotyczący szyfrowania end-to-end w Excalidraw"
+    "tooltip": "Twoje rysunki są zabezpieczone szyfrowaniem end-to-end, tak więc nawet w Mosaic nie jesteśmy w stanie zobaczyć tego co tworzysz.",
+    "link": "Wpis na blogu dotyczący szyfrowania end-to-end w Mosaic"
   },
   "stats": {
     "angle": "Kąt",
@@ -650,7 +650,7 @@
     }
   },
   "mermaid": {
-    "title": "Konwertuj diagram Mermaid do Excalidraw",
+    "title": "Konwertuj diagram Mermaid do Mosaic",
     "button": "Wstaw",
     "description": "",
     "syntax": "Składnia diagramów Mermaid",

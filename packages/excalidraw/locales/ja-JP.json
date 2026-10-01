@@ -72,7 +72,7 @@
     "arrowtype_elbowed": "折れ線矢印",
     "fontSize": "フォントの大きさ",
     "fontFamily": "フォントの種類",
-    "addWatermark": "\"Made with Excalidraw\"と表示",
+    "addWatermark": "\"Made with Mosaic\"と表示",
     "handDrawn": "手描き風",
     "normal": "普通",
     "code": "コード",
@@ -107,7 +107,7 @@
     "untitled": "無題",
     "name": "名前",
     "yourName": "あなたの名前",
-    "madeWithExcalidraw": "Excalidrawで作成",
+    "madeWithExcalidraw": "Mosaicで作成",
     "group": "グループ化",
     "ungroup": "グループ化を解除",
     "collaborators": "共同編集者",
@@ -138,7 +138,7 @@
     "toggleTheme": "ライト/ダークテーマに変更",
     "theme": "テーマ",
     "personalLib": "個人ライブラリ",
-    "excalidrawLib": "Excalidrawライブラリ",
+    "excalidrawLib": "Mosaicライブラリ",
     "decreaseFontSize": "フォントサイズを縮小",
     "increaseFontSize": "フォントサイズを拡大",
     "unbindText": "テキストのバインド解除",
@@ -180,7 +180,7 @@
     "zoomToFitViewport": "表示範囲に合わせてズーム",
     "zoomToFitSelection": "選択範囲に合わせてズーム",
     "zoomToFit": "すべての要素が収まるようにズーム",
-    "installPWA": "Excalidrawをローカルにインストール(PWA)",
+    "installPWA": "Mosaicをローカルにインストール(PWA)",
     "autoResize": "テキストの自動サイズ変更を有効化",
     "imageCropping": "画像の切り抜き",
     "unCroppedDimension": "元のサイズ",
@@ -272,7 +272,7 @@
     "cannotExportEmptyCanvas": "空のキャンバスはエクスポートできません。",
     "couldNotCopyToClipboard": "クリップボードにコピーできませんでした。",
     "decryptFailed": "データを復号できませんでした。",
-    "uploadedSecurly": "データのアップロードはエンドツーエンド暗号化によって保護されています。Excalidrawサーバーと第三者はデータの内容を見ることができません。",
+    "uploadedSecurly": "データのアップロードはエンドツーエンド暗号化によって保護されています。Mosaicサーバーと第三者はデータの内容を見ることができません。",
     "loadSceneOverridePrompt": "外部の描画データを読み込むと、既存のコンテンツが置き換わります。続行しますか？",
     "collabStopOverridePrompt": "セッションを停止すると、ローカルに保存されている図が上書きされます。 本当によろしいですか？\n\n(ローカルの図を保持したい場合は、セッションを停止せずにブラウザーのタブを閉じてください。)",
     "errorAddingToLibrary": "アイテムをライブラリに追加できませんでした",
@@ -280,7 +280,7 @@
     "confirmAddLibrary": "{{numShapes}} 個の図形をライブラリに追加します。よろしいですか？",
     "imageDoesNotContainScene": "この画像にはシーンデータが含まれていないようです。エクスポート時にシーンの埋め込みを有効にしましたか？",
     "cannotRestoreFromImage": "このイメージファイルからシーンを復元できませんでした",
-    "invalidSceneUrl": "指定された URL からシーンをインポートできませんでした。不正な形式であるか、有効な Excalidraw JSON データが含まれていません。",
+    "invalidSceneUrl": "指定された URL からシーンをインポートできませんでした。不正な形式であるか、有効な Mosaic JSON データが含まれていません。",
     "resetLibrary": "ライブラリを消去します。本当によろしいですか？",
     "removeItemsFromsLibrary": "{{count}} 個のアイテムをライブラリから削除しますか？",
     "invalidEncryptionKey": "暗号化キーは22文字でなければなりません。共同編集は無効化されています。",
@@ -338,7 +338,7 @@
     "bucketfill": "",
     "hand": "手 (パンニングツール)",
     "extraTools": "その他のツール",
-    "mermaidToExcalidraw": "Mermaid を Excalidraw に変換",
+    "mermaidToExcalidraw": "Mermaid を Mosaic に変換",
     "convertElementType": "図形タイプを切り替え"
   },
   "bucketfill": {
@@ -422,7 +422,7 @@
     "desc_inProgressIntro": "共同編集セッションが有効になっています。",
     "desc_shareLink": "下記URLを共同編集したい人に共有してください：",
     "desc_exitSession": "セッションを終了するとあなたはルームから切断されますが、ローカルで作業を続けることができます。セッションを終了しても他のメンバには影響はなく、引き続き共同作業を行うことができます。",
-    "shareTitle": "Excalidrawの共同編集セッションに参加する"
+    "shareTitle": "Mosaicの共同編集セッションに参加する"
   },
   "errorDialog": {
     "title": "エラー"
@@ -539,8 +539,8 @@
     }
   },
   "encrypted": {
-    "tooltip": "描画内容はエンドツーエンド暗号化が施されており、Excalidrawサーバーが内容を見ることはできません。",
-    "link": "Excalidrawのエンドツーエンド暗号化に関するブログ記事"
+    "tooltip": "描画内容はエンドツーエンド暗号化が施されており、Mosaicサーバーが内容を見ることはできません。",
+    "link": "Mosaicのエンドツーエンド暗号化に関するブログ記事"
   },
   "stats": {
     "angle": "角度",
@@ -650,7 +650,7 @@
     }
   },
   "mermaid": {
-    "title": "Mermaid を Excalidraw に変換",
+    "title": "Mermaid を Mosaic に変換",
     "button": "挿入",
     "description": "",
     "syntax": "Mermaid 構文",
