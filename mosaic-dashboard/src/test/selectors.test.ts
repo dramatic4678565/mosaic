@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Board, Folder } from "@/db/schema";
+
 import {
   countBoardsInFolder,
   daysUntilPurge,
@@ -95,7 +96,9 @@ describe("selectBoards filtering", () => {
     expect(
       selectBoards(all, { folderId: "f1", query: "liv" }).map((b) => b.name),
     ).toEqual(["Live"]);
-    expect(selectBoards(all, { folderId: "f1", query: "unfil" })).toHaveLength(0);
+    expect(selectBoards(all, { folderId: "f1", query: "unfil" })).toHaveLength(
+      0,
+    );
   });
 });
 
@@ -105,14 +108,17 @@ describe("sortBoards", () => {
     const old = board({ name: "Old", updatedAt: 100, lastOpenedAt: 200 });
     const fresh = board({ name: "Fresh", updatedAt: 100, lastOpenedAt: 999 });
 
-    expect(sortBoards([neverOpened, old, fresh], "recent").map((b) => b.name)).toEqual(
-      ["Fresh", "Never", "Old"],
-    );
+    expect(
+      sortBoards([neverOpened, old, fresh], "recent").map((b) => b.name),
+    ).toEqual(["Fresh", "Never", "Old"]);
   });
 
   it("name sorts alphabetically, case-insensitive", () => {
     const rows = [board({ name: "beta" }), board({ name: "Alpha" })];
-    expect(sortBoards(rows, "name").map((b) => b.name)).toEqual(["Alpha", "beta"]);
+    expect(sortBoards(rows, "name").map((b) => b.name)).toEqual([
+      "Alpha",
+      "beta",
+    ]);
   });
 
   it("created sorts newest first", () => {
@@ -120,7 +126,10 @@ describe("sortBoards", () => {
       board({ name: "old", createdAt: 1 }),
       board({ name: "new", createdAt: 999 }),
     ];
-    expect(sortBoards(rows, "created").map((b) => b.name)).toEqual(["new", "old"]);
+    expect(sortBoards(rows, "created").map((b) => b.name)).toEqual([
+      "new",
+      "old",
+    ]);
   });
 
   it("size sorts largest first and puts unknown sizes last", () => {

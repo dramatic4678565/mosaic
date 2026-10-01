@@ -62,7 +62,7 @@ describe("board CRUD", () => {
     expect((await getBoard(board.id))?.name).toBe("Second");
   });
 
-it("toggles favourite and records the resulting state in activity", async () => {
+  it("toggles favourite and records the resulting state in activity", async () => {
     const board = await createBoard();
 
     const on = await toggleFavorite(board.id);
@@ -72,9 +72,9 @@ it("toggles favourite and records the resulting state in activity", async () => 
     expect(off?.favorite).toBe(false);
 
     const activity = await listBoardActivity(board.id);
-    expect(activity.filter((a) => a.type === "favorite").map((a) => a.detail)).toEqual(
-      ["on", "off"],
-    );
+    expect(
+      activity.filter((a) => a.type === "favorite").map((a) => a.detail),
+    ).toEqual(["on", "off"]);
   });
 
   it("setFavorite is idempotent for a given value", async () => {
@@ -255,7 +255,8 @@ describe("trash", () => {
     await trashBoard(fresh.id);
 
     // Backdate the first one past the retention window.
-    const cutoff = Date.now() - (TRASH_RETENTION_DAYS + 1) * 24 * 60 * 60 * 1000;
+    const cutoff =
+      Date.now() - (TRASH_RETENTION_DAYS + 1) * 24 * 60 * 60 * 1000;
     const { db } = await import("@/db/index");
     await db.boards.update(old.id, { trashedAt: cutoff });
 

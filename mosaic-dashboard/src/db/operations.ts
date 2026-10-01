@@ -1,6 +1,14 @@
-import { db } from "./index";
-import type { Activity, ActivityType, Board, Folder, FolderColor } from "./schema";
 import { TRASH_RETENTION_DAYS } from "./schema";
+
+import { db } from "./index";
+
+import type {
+  Activity,
+  ActivityType,
+  Board,
+  Folder,
+  FolderColor,
+} from "./schema";
 
 /**
  * All IndexedDB access goes through this module.
@@ -30,7 +38,9 @@ export const newId = (): string => {
     const bytes = c.getRandomValues(new Uint8Array(16));
     return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
   }
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+  return `${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 12)}`;
 };
 
 const now = () => Date.now();
@@ -74,7 +84,9 @@ export const createBoard = async (
     updatedAt: ts,
     lastOpenedAt: null,
     ...(partial.scene !== undefined ? { scene: partial.scene } : {}),
-    ...(partial.thumbnail !== undefined ? { thumbnail: partial.thumbnail } : {}),
+    ...(partial.thumbnail !== undefined
+      ? { thumbnail: partial.thumbnail }
+      : {}),
   };
   await db.boards.add(board);
   await logActivity("create", board.id);
@@ -97,12 +109,16 @@ export const listBoards = async (
 
   if (typeof folderId === "string") {
     const rows = await db.boards.where("folderId").equals(folderId).toArray();
-    const scoped = includeTrashed ? rows : rows.filter((b) => b.trashedAt === null);
+    const scoped = includeTrashed
+      ? rows
+      : rows.filter((b) => b.trashedAt === null);
     return withoutScene(scoped);
   }
 
   const rows = await db.boards.toArray();
-  const scoped = includeTrashed ? rows : rows.filter((b) => b.trashedAt === null);
+  const scoped = includeTrashed
+    ? rows
+    : rows.filter((b) => b.trashedAt === null);
   return withoutScene(scoped);
 };
 
@@ -191,7 +207,9 @@ export const moveBoardToFolder = async (
  * The copy is always created unfiled and unfavourited — duplicating should not
  * silently clone organisation decisions.
  */
-export const duplicateBoard = async (id: string): Promise<Board | undefined> => {
+export const duplicateBoard = async (
+  id: string,
+): Promise<Board | undefined> => {
   const source = await db.boards.get(id);
   if (!source) {
     return undefined;
@@ -333,8 +351,7 @@ export const createFolder = async (
   return folder;
 };
 
-export const listFolders = async (): Promise<Folder[]> =>
-  db.folders.toArray();
+export const listFolders = async (): Promise<Folder[]> => db.folders.toArray();
 
 export const getFolder = async (id: string): Promise<Folder | undefined> =>
   db.folders.get(id);
@@ -414,9 +431,7 @@ const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
  * across three different code paths (create/rename/delete/favorite/move) with
  * no transactional benefit.
  */
-export const getBoardStats = async (
-  boardId: string,
-): Promise<BoardStats> => {
+export const getBoardStats = async (boardId: string): Promise<BoardStats> => {
   const rows = await db.activity.where("boardId").equals(boardId).toArray();
   if (!rows.length) {
     return { total: 0, last7Days: 0, lastActivityAt: null };
@@ -436,7 +451,9 @@ export const getBoardStats = async (
 };
 
 /** Bulk stats for many boards in one pass, keyed by board id. */
-export const getBoardStatsMap = async (): Promise<Record<string, BoardStats>> => {
+export const getBoardStatsMap = async (): Promise<
+  Record<string, BoardStats>
+> => {
   const rows = await db.activity.toArray();
   const cutoff = Date.now() - SEVEN_DAYS_MS;
   const map: Record<string, BoardStats> = {};

@@ -19,7 +19,7 @@ export const matchesQuery = (board: Board, query: string): boolean => {
 
 /** "3 boards" / "1 board" — avoids a plural bug in three different places. */
 export const pluralize = (count: number, singular: string, plural?: string) =>
-  `${count} ${count === 1 ? singular : (plural ?? `${singular}s`)}`;
+  `${count} ${count === 1 ? singular : plural ?? `${singular}s`}`;
 
 const byName = (a: Board, b: Board) =>
   a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
@@ -38,9 +38,7 @@ export const sortBoards = (boards: Board[], sort: BoardSort): Board[] => {
     case "size":
       // Unknown size (never opened) sorts last rather than first, so the grid
       // does not open with a wall of 0-byte placeholders.
-      return next.sort(
-        (a, b) => (b.sceneBytes ?? -1) - (a.sceneBytes ?? -1),
-      );
+      return next.sort((a, b) => (b.sceneBytes ?? -1) - (a.sceneBytes ?? -1));
     case "recent":
     default:
       // Fall back to updatedAt when a board has never been opened, otherwise
@@ -139,7 +137,10 @@ export const daysUntilPurge = (
     return null;
   }
   const expiresAt = board.trashedAt + retentionDays * 24 * 60 * 60 * 1000;
-  return Math.max(0, Math.ceil((expiresAt - reference) / (24 * 60 * 60 * 1000)));
+  return Math.max(
+    0,
+    Math.ceil((expiresAt - reference) / (24 * 60 * 60 * 1000)),
+  );
 };
 
 /**
@@ -178,7 +179,7 @@ export const formatBytes = (bytes: number | undefined): string => {
     value /= 1024;
     unitIndex += 1;
   }
-  return `${value < 10 && unitIndex > 0 ? value.toFixed(1) : Math.round(value)} ${
-    units[unitIndex]
-  }`;
+  return `${
+    value < 10 && unitIndex > 0 ? value.toFixed(1) : Math.round(value)
+  } ${units[unitIndex]}`;
 };

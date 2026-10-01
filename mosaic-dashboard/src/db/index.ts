@@ -27,7 +27,8 @@ export class MosaicDB extends Dexie {
   constructor(name = DEFAULT_DB_NAME) {
     super(name);
     this.version(1).stores({
-      boards: "id, name, folderId, trashedAt, updatedAt, createdAt, lastOpenedAt",
+      boards:
+        "id, name, folderId, trashedAt, updatedAt, createdAt, lastOpenedAt",
       folders: "id, name, parentId, createdAt",
       activity: "id, type, boardId, ts",
     });
@@ -47,7 +48,11 @@ export const db = new MosaicDB();
  * action on the Settings page.
  */
 export const resetDatabase = async () => {
-  await Promise.all([db.boards.clear(), db.folders.clear(), db.activity.clear()]);
+  await Promise.all([
+    db.boards.clear(),
+    db.folders.clear(),
+    db.activity.clear(),
+  ]);
 };
 
 /**

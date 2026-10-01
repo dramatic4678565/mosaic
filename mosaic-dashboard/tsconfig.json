@@ -19,11 +19,5 @@
     }
   },
   "include": ["src"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "e2e",
-    "vite.config.mts",
-    "vitest.config.mts"
-  ]
+  "exclude": ["node_modules", "dist", "e2e", "vite.config.mts", "vitest.config.mts"]
 }

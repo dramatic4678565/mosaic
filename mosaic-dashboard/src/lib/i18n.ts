@@ -136,7 +136,10 @@ const dictionaries: Record<string, Dictionary> = { en };
  *   t("nav.allBoards")                       // "All boards"
  *   t("activity.stats", { count: 3, recent: 2 })
  */
-export function t(key: string, values?: Record<string, string | number>): string {
+export function t(
+  key: string,
+  values?: Record<string, string | number>,
+): string {
   const dict = dictionaries[activeLocale] ?? en;
   const template = dict[key] ?? key;
 

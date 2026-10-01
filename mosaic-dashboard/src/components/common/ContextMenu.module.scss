@@ -1,0 +1,60 @@
+@use "../../styles/tokens" as t;
+
+.menu {
+  position: fixed;
+  z-index: 70;
+  min-width: 200px;
+  max-width: 240px;
+  padding: t.$space-xs;
+  border: 1px solid t.$color-border;
+  border-radius: t.$radius-md;
+  background: t.$color-surface;
+  box-shadow: t.$shadow-lg;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: t.$space-sm;
+  width: 100%;
+  padding: t.$space-sm t.$space-md;
+  border: none;
+  border-radius: t.$radius-sm;
+  background: transparent;
+  font-size: 13px;
+  text-align: left;
+  color: t.$color-text;
+
+  &:hover {
+    background: t.$color-surface-sunken;
+  }
+
+  &.isDanger {
+    color: t.$color-danger;
+
+    &:hover {
+      background: t.$color-danger-bg;
+    }
+  }
+}
+
+.separator {
+  height: 1px;
+  margin: t.$space-xs 0;
+  background: t.$color-border;
+}
+
+.label {
+  padding: t.$space-xs t.$space-md;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$color-text-faint;
+}
+
+.submenu {
+  padding-left: t.$space-md;
+  border-left: 2px solid t.$color-border;
+  margin: t.$space-xs 0 t.$space-xs t.$space-md;
+}

@@ -1,0 +1,57 @@
+@use "../styles/tokens" as t;
+
+/**
+ * Dashboard reset, scoped.
+ *
+ * Hard rule from the brief: no new global CSS that leaks into the editor app.
+ * The editor is a separate Vite app with its own stylesheet, so nothing here can
+ * actually reach it — but the guard below keeps that true structurally: every
+ * selector is nested under `.dashboardRoot`, and `:global()` is never used except
+ * for the handful of element resets that are unavoidable for a full-page app.
+ */
+
+.dashboardRoot {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: t.$font-ui;
+    color: t.$color-text;
+    background: t.$color-surface;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  input,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ul,
+  ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+}
