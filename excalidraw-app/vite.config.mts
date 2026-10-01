@@ -24,6 +24,17 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: [
         {
+          find: /^@mosaic\/brand$/,
+          replacement: path.resolve(
+            __dirname,
+            "../packages/mosaic-brand/src/index.ts",
+          ),
+        },
+        {
+          find: /^@mosaic\/brand\/(.*?)/,
+          replacement: path.resolve(__dirname, "../packages/mosaic-brand/src/$1"),
+        },
+        {
           find: /^@excalidraw\/common$/,
           replacement: path.resolve(
             __dirname,

@@ -19,6 +19,8 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
+      "@mosaic/brand": ["./packages/mosaic-brand/src/index.ts"],
+      "@mosaic/brand/*": ["./packages/mosaic-brand/src/*"],
       "@excalidraw/common": ["./packages/common/src/index.ts"],
       "@excalidraw/common/*": ["./packages/common/src/*"],
       "@excalidraw/excalidraw": ["./packages/excalidraw/index.tsx"],

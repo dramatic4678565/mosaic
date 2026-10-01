@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" width="720" height="240" role="img" aria-label="Mosaic">
+  <title>Mosaic</title>
+  <g transform="translate(56 64)">
+    <rect x="8" y="8" width="42" height="42" rx="11" fill="#3977df"/>
+    <rect x="60" y="8" width="42" height="42" rx="11" fill="#91b2f6"/>
+    <rect x="8" y="60" width="42" height="42" rx="11" fill="#759dec"/>
+    <rect x="60" y="60" width="42" height="42" rx="11" fill="#d4e1fc"/>
+  </g>
+  <text x="210" y="133" font-family="Inter,Arial,sans-serif" font-size="40" font-weight="650" fill="#253144">Mosaic</text>
+</svg>
