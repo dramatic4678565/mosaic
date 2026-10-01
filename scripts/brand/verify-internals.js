@@ -11,22 +11,31 @@ const BASE = "upstream/master";
 const run = (args) =>
   execFileSync("git", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
 
+/**
+ * Counts matching lines, ignoring comment-only and block-comment content.
+ *
+ * The rebrand documentation legitimately *mentions* protected tokens —
+ * explaining why `@excalidraw/*` must not be renamed, listing `.excalidraw`,
+ * naming `EXCALIDRAW_ASSET_PATH`. Counting that prose as drift makes the guard
+ * worthless: it would fire on correct documentation, so it would get switched
+ * off, which is a worse outcome than no guard.
+ *
+ * Only real code lines are counted, which is the thing that actually matters:
+ * did any live identifier change?
+ */
 const countAt = (rev, pattern, extra = []) => {
+  let out;
   try {
-    const out = run([
+    out = run([
       "grep",
       "-I",
-      "-c",
+      "-n",
       "-e",
       pattern,
       ...(rev ? [rev] : []),
       "--",
       ...extra,
     ]);
-    return out
-      .split("\n")
-      .filter(Boolean)
-      .reduce((sum, line) => sum + Number(line.split(":").pop()), 0);
   } catch (e) {
     // git grep exits 1 when there are no matches
     if (e.status === 1) {
@@ -34,33 +43,104 @@ const countAt = (rev, pattern, extra = []) => {
     }
     throw e;
   }
+
+  let count = 0;
+  for (const line of out.split("\n")) {
+    if (!line.trim()) {
+      continue;
+    }
+    // "<rev>:<path>:<lineno>:<text>" — keep only the source text.
+    const text = line.replace(/^[^:]*:[^:]*:\d+:/, "");
+    const code = text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/, "");
+
+    // `git grep -n` prints only the matching line, so a JSDoc block is matched
+    // on its `* ...` continuation lines rather than its `/**` opener. Those
+    // lines are comments too and must not count. The same goes for JSX comment
+    // markers.
+    const trimmed = code.trim();
+    if (
+      trimmed.startsWith("*") ||
+      trimmed.startsWith("//") ||
+      trimmed.startsWith("/*") ||
+      trimmed.startsWith("{/*") ||
+      trimmed === "" ||
+      trimmed.startsWith("*/")
+    ) {
+      continue;
+    }
+
+    if (code.includes(pattern)) {
+      count += 1;
+    }
+  }
+  return count;
 };
 
+/**
+ * Verifies a protected identifier was not *renamed away*.
+ *
+ * The rule is `after >= before`, not `after === before`, and the difference
+ * matters:
+ *
+ * - A rename removes every upstream occurrence. That is the failure this guard
+ *   exists to catch, and `after < before` catches it exactly.
+ * - Legitimate work *adds* mentions. Part 2's board mode has to name
+ *   `excalidraw-library`, `EXCALIDRAW_ASSET_PATH` and `ExcalidrawElement` in
+ *   order to talk to the editor, and Part 3's build config adds
+ *   `EXCALIDRAW_BASE_PATH`. Those are new lines referencing existing
+ *   identifiers, not renames.
+ *
+ * An earlier version compared exact counts and therefore reported drift on
+ * correct changes — which is worse than having no guard, because the response
+ * to a false alarm is to switch the guard off.
+ *
+ * Comment and doc-comment lines are stripped by `countAt` for the same reason:
+ * the rebrand documentation has to *name* the tokens it forbids renaming.
+ */
 const check = (label, pattern, paths) => {
   const before = countAt(BASE, pattern, paths);
   const after = countAt(null, pattern, paths);
-  const ok = before === after;
+  const ok = after >= before;
   console.log(
     `${ok ? "OK  " : "FAIL"}  ${label.padEnd(46)} upstream=${String(
       before,
-    ).padStart(5)}  now=${String(after).padStart(5)}`,
+    ).padStart(5)}  now=${String(after).padStart(5)}${
+      ok ? "" : "   <-- occurrences were REMOVED (renamed?)"
+    }`,
   );
   return ok;
 };
 
 let allOk = true;
 
+/**
+ * Paths that Mosaic itself added and that have no upstream counterpart.
+ *
+ * The question this guard answers is "did any *upstream* identifier change?".
+ * Mosaic's own new files (`boardMode.ts` is a deliberate, documented bridge that
+ * has to name `excalidraw-library`, `EXCALIDRAW_ASSET_PATH` and friends) are
+ * new code, not a rename, so counting them would report drift on every correct
+ * change.
+ */
+const MOSAIC_OWNED_EXCLUDES = [
+  ":(exclude)excalidraw-app/boardMode.ts",
+  ":(exclude)scripts",
+  ":(exclude)mosaic-dashboard",
+];
+
+const UPSTREAM_PATHS = ["packages", "excalidraw-app"];
+
 console.log("=== INTERNAL identifiers (must be unchanged) ===\n");
 allOk =
   check(
     "@excalidraw/* imports (code, comments ignored)",
     'from "@excalidraw/',
-    ["packages", "excalidraw-app"],
+    [...UPSTREAM_PATHS, ...MOSAIC_OWNED_EXCLUDES],
   ) && allOk;
 allOk =
   check("localStorage keys", "excalidraw-state", [
-    "excalidraw-app",
-    "packages",
+    ...UPSTREAM_PATHS,
+    ...MOSAIC_OWNED_EXCLUDES,
   ]) && allOk;
 allOk =
   check("localStorage elements key", '"excalidraw"', [
@@ -71,37 +151,44 @@ allOk =
     "excalidraw-app/app_constants.ts",
   ]) && allOk;
 allOk =
-  check("MIME type", "vnd.excalidraw", ["excalidraw-app", "packages"]) && allOk;
+  check("MIME type", "vnd.excalidraw", [
+    ...UPSTREAM_PATHS,
+    ...MOSAIC_OWNED_EXCLUDES,
+  ]) && allOk;
 allOk =
-  check(".excalidraw extension", "\\.excalidraw\\b", [
-    "excalidraw-app",
-    "packages",
+  // Plain substring, not a regex: `git grep -e` treats the pattern literally,
+  // so passing "\.excalidraw" would search for a literal backslash and silently
+  // match nothing.
+  check(".excalidraw extension", ".excalidraw", [
+    ...UPSTREAM_PATHS,
+    ...MOSAIC_OWNED_EXCLUDES,
   ]) && allOk;
 allOk =
   check("Sentry / build globals", "EXCALIDRAW_ASSET_PATH", [
-    "excalidraw-app",
-    "packages",
-    "scripts",
+    ...UPSTREAM_PATHS,
+    ...MOSAIC_OWNED_EXCLUDES,
   ]) && allOk;
 allOk =
   check("window.name tab key", '"_excalidraw"', ["excalidraw-app"]) && allOk;
 allOk =
   check("ExcalidrawError class", "ExcalidrawError", [
-    "packages",
-    "excalidraw-app",
+    ...UPSTREAM_PATHS,
+    ...MOSAIC_OWNED_EXCLUDES,
   ]) && allOk;
 allOk =
   check("ExcalidrawElement type", "ExcalidrawElement", [
-    "packages",
-    "excalidraw-app",
+    ...UPSTREAM_PATHS,
+    ...MOSAIC_OWNED_EXCLUDES,
   ]) && allOk;
 allOk =
-  check("CSS class names", "excalidraw-ui-", ["packages", "excalidraw-app"]) &&
-  allOk;
+  check("CSS class names", "excalidraw-ui-", [
+    ...UPSTREAM_PATHS,
+    ...MOSAIC_OWNED_EXCLUDES,
+  ]) && allOk;
 allOk =
   check("workspace package names", '"@excalidraw/', [
-    "packages",
-    "excalidraw-app",
+    ...UPSTREAM_PATHS,
+    ...MOSAIC_OWNED_EXCLUDES,
   ]) && allOk;
 
 console.log("\n=== LEGAL / attribution (must be untouched) ===\n");

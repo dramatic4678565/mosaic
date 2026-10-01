@@ -29,6 +29,8 @@ export const SettingsPage = () => {
         </h2>
         <p style={{ color: "#5b6676", fontSize: 13, margin: "0 0 16px" }}>
           {t("settings.usage", {
+            // pluralize supplies the noun and the correct "1 board" / "2 boards"
+            // inflection; the template deliberately has no hard-coded plural.
             boards: pluralize(boards.length, "board"),
             folders: pluralize(folders.length, "folder"),
           })}

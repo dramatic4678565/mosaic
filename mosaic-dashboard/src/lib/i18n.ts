@@ -100,7 +100,7 @@ const en: Dictionary = {
 
   "settings.title": "Settings",
   "settings.storage": "Storage",
-  "settings.usage": "Using {boards} boards and {folders} folders",
+  "settings.usage": "Using {boards} and {folders}",
   "settings.reset": "Delete all local data",
   "settings.resetConfirm": "This permanently deletes every board and folder.",
 
