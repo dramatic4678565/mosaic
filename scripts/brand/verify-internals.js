@@ -6,6 +6,9 @@
  */
 import { execFileSync } from "child_process";
 
+const run = (args) =>
+  execFileSync("git", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+
 const BASE = "upstream/master";
 
 /**
@@ -28,9 +31,6 @@ try {
   );
   process.exit(1);
 }
-
-const run = (args) =>
-  execFileSync("git", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
 
 /**
  * Counts matching lines, ignoring comment-only and block-comment content.
