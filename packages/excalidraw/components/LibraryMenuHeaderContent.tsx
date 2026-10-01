@@ -2,6 +2,7 @@ import clsx from "clsx";
 import { useCallback, useState } from "react";
 
 import { muteFSAbortError } from "@excalidraw/common";
+import { BRAND_LIBRARY_FILES_DESCRIPTION } from "@mosaic/brand";
 
 import { useUIAppState } from "../context/ui-appState";
 import { fileOpen } from "../data/filesystem";
@@ -159,7 +160,7 @@ export const LibraryDropdownMenuButton: React.FC<{
     try {
       await library.updateLibrary({
         libraryItems: fileOpen({
-          description: "Excalidraw library files",
+          description: BRAND_LIBRARY_FILES_DESCRIPTION,
           // ToDo: Be over-permissive until https://bugs.webkit.org/show_bug.cgi?id=34442
           // gets resolved. Else, iOS users cannot open `.excalidraw` files.
           /*

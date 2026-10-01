@@ -482,7 +482,7 @@ exports[`<Excalidraw/> > Test UIOptions prop > Test canvasActions > should rende
       <p
         class="dropdown-menu-group-title"
       >
-        Excalidraw links
+        Mosaic links
       </p>
       <a
         aria-label="GitHub"

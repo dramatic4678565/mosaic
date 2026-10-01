@@ -104,6 +104,7 @@ import {
   oneOf,
   getStrokeWidthByKey,
 } from "@excalidraw/common";
+import { BRAND_EMBEDDED_CONTENT_TITLE } from "@mosaic/brand";
 
 import {
   getObservedAppState,
@@ -2042,7 +2043,7 @@ class App extends React.Component<AppProps, AppState> {
                         // https://stackoverflow.com/q/18470015
                         scrolling="no"
                         referrerPolicy="no-referrer-when-downgrade"
-                        title="Excalidraw Embedded Content"
+                        title={BRAND_EMBEDDED_CONTENT_TITLE}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen={true}
                         sandbox={`${
