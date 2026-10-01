@@ -1,124 +1,157 @@
-<a href="https://excalidraw.com/" target="_blank" rel="noopener">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" alt="Excalidraw" srcset="https://excalidraw.nyc3.cdn.digitaloceanspaces.com/github/excalidraw_github_cover_2_dark.png" />
-    <img alt="Excalidraw" src="https://excalidraw.nyc3.cdn.digitaloceanspaces.com/github/excalidraw_github_cover_2.png" />
-  </picture>
-</a>
-
-<h4 align="center">
-  <a href="https://excalidraw.com">Excalidraw Editor</a> |
-  <a href="https://plus.excalidraw.com/blog">Blog</a> |
-  <a href="https://docs.excalidraw.com">Documentation</a> |
-  <a href="https://plus.excalidraw.com">Excalidraw+</a>
-</h4>
-
 <div align="center">
-  <h2>
-    An open source virtual hand-drawn style whiteboard. </br>
-    Collaborative and end-to-end encrypted. </br>
-  <br />
-  </h2>
+
+# Mosaic
+
+**A visual whiteboard, rebranded — plus a dashboard for your boards.**
+
+[![CI](https://github.com/dramatic4678565/mosaic/actions/workflows/ci.yml/badge.svg)](https://github.com/dramatic4678565/mosaic/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+`/dashboard` in this image is Mosaic's own dashboard. The editor lives at `/app/` (see [Layout](#deployment-layout)).
+
 </div>
 
-<br />
-<p align="center">
-  <a href="https://github.com/excalidraw/excalidraw/blob/master/LICENSE">
-    <img alt="Excalidraw is released under the MIT license." src="https://img.shields.io/badge/license-MIT-blue.svg"  /></a>
-  <a href="https://www.npmjs.com/package/@excalidraw/excalidraw">
-    <img alt="npm downloads/month" src="https://img.shields.io/npm/dm/@excalidraw/excalidraw"  /></a>
-  <a href="https://docs.excalidraw.com/docs/introduction/contributing">
-    <img alt="PRs welcome!" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat"  /></a>
-  <a href="https://discord.gg/UexuTaE">
-    <img alt="Chat on Discord" src="https://img.shields.io/discord/723672430744174682?color=738ad6&label=Chat%20on%20Discord&logo=discord&logoColor=ffffff&widget=false"/></a>
-  <a href="https://deepwiki.com/excalidraw/excalidraw">
-    <img alt="Ask DeepWiki" src="https://deepwiki.com/badge.svg" /></a>
-  <a href="https://twitter.com/excalidraw">
-    <img alt="Follow Excalidraw on Twitter" src="https://img.shields.io/twitter/follow/excalidraw.svg?label=follow+@excalidraw&style=social&logo=twitter"/></a>
-</p>
+---
 
-<div align="center">
-  <figure>
-    <a href="https://excalidraw.com" target="_blank" rel="noopener">
-      <img src="https://excalidraw.nyc3.cdn.digitaloceanspaces.com/github%2Fproduct_showcase.png" alt="Product showcase" />
-    </a>
-    <figcaption>
-      <p align="center">
-        Create beautiful hand-drawn like diagrams, wireframes, or whatever you like.
-      </p>
-    </figcaption>
-  </figure>
-</div>
+## What Mosaic is
 
-## Features
+Mosaic is a fork of [Excalidraw](https://github.com/excalidraw/excalidraw) with two things added:
 
-The Excalidraw editor (npm package) supports:
+1. **A rebrand.** Every user-visible string, the logo, the favicons, the PWA icons, the OG image and all 58 locales now say _Mosaic_.
+2. **A dashboard.** Boards, folders, favourites, an activity timeline and a trash — all stored locally in IndexedDB, all opening back into the editor.
 
-- 💯&nbsp;Free & open-source.
-- 🎨&nbsp;Infinite, canvas-based whiteboard.
-- ✍️&nbsp;Hand-drawn like style.
-- 🌓&nbsp;Dark mode.
-- 🏗️&nbsp;Customizable.
-- 📷&nbsp;Image support.
-- 😀&nbsp;Shape libraries support.
-- 🌐&nbsp;Localization (i18n) support.
-- 🖼️&nbsp;Export to PNG, SVG & clipboard.
-- 💾&nbsp;Open format - export drawings as an `.excalidraw` json file.
-- ⚒️&nbsp;Wide range of tools - rectangle, circle, diamond, arrow, line, free-draw, eraser...
-- ➡️&nbsp;Arrow-binding & labeled arrows.
-- 🔙&nbsp;Undo / Redo.
-- 🔍&nbsp;Zoom and panning support.
+Built as a monorepo:
 
-## Excalidraw.com
+| App | Location | What it is |
+| --- | --- | --- |
+| Editor | `excalidraw-app/`, `packages/` | the whiteboard (upstream Excalidraw, rebranded) |
+| Dashboard | `mosaic-dashboard/` | boards, folders, favourites, activity |
+| Brand | `packages/mosaic-brand/` | single source of truth for product strings |
 
-The app hosted at [excalidraw.com](https://excalidraw.com) is a minimal showcase of what you can build with Excalidraw. Its [source code](https://github.com/excalidraw/excalidraw/tree/master/excalidraw-app) is part of this repository as well, and the app features:
+### Screenshots
 
-- 📡&nbsp;PWA support (works offline).
-- 🤼&nbsp;Real-time collaboration.
-- 🔒&nbsp;End-to-end encryption.
-- 💾&nbsp;Local-first support (autosaves to the browser).
-- 🔗&nbsp;Shareable links (export to a readonly link you can share with others).
+| Dashboard                        | Editor                     |
+| -------------------------------- | -------------------------- |
+| ![Dashboard](docs/dashboard.png) | ![Editor](docs/editor.png) |
 
-We'll be adding these features as drop-in plugins for the npm package in the future.
+Regenerate with `node scripts/screenshots.js` after `yarn build:all`.
 
-## Quick start
+---
 
-**Note:** following instructions are for installing the Excalidraw [npm package](https://www.npmjs.com/package/@excalidraw/excalidraw) when integrating Excalidraw into your own app. To run the repository locally for development, please refer to our [Development Guide](https://docs.excalidraw.com/docs/introduction/development).
+## Quickstart
 
-Use `npm` or `yarn` to install the package.
+### Local development
+
+Requires Node 20+ and Yarn 1.22.
 
 ```bash
-npm install react react-dom @excalidraw/excalidraw
-# or
-yarn add react react-dom @excalidraw/excalidraw
+yarn install
+
+# two terminals — they must be same-origin, which the dev proxy handles
+yarn start          # editor  -> http://localhost:3001
+yarn --cwd mosaic-dashboard dev   # dashboard -> http://localhost:3001
 ```
 
-Check out our [documentation](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/installation) for more details!
+Both apps are served through one dev proxy so they share a single IndexedDB. **Do not open them on different origins** — the dashboard embeds the editor and reads board scenes straight out of the browser's database, so a cross-origin editor silently opens an empty board.
+
+### Docker
+
+```bash
+docker compose up --build     # -> http://localhost:8080
+```
+
+One image serves both apps. Requires Docker Desktop.
+
+### Tests
+
+```bash
+yarn test:typecheck   # tsc, all workspaces
+yarn test:code        # eslint, --max-warnings=0
+yarn test:other       # prettier
+yarn test:app --watch=false   # editor unit tests (~2400)
+yarn test:dashboard   # dashboard unit tests (52)
+yarn e2e              # Playwright: builds both apps, then 25 specs
+yarn verify:brand     # rebrand guard — did an internal identifier get renamed?
+```
+
+`yarn verify:brand` is the most important one after touching anything bulk. See [`REBRAND.md`](REBRAND.md).
+
+---
+
+## Deployment layout
+
+```
+/        -> mosaic-dashboard     (the dashboard)
+/app/    -> excalidraw-app       (the editor)
+```
+
+Both must be **one origin**. Three settings have to agree, and each app and the server needs its own:
+
+| Value                         | Set in                 | Default |
+| ----------------------------- | ---------------------- | ------- |
+| editor build base             | `EXCALIDRAW_BASE_PATH` | `/`     |
+| iframe URL the dashboard uses | `VITE_EDITOR_BASE`     | `/app/` |
+| where the editor is mounted   | nginx / `EDITOR_BASE`  | `/app/` |
+
+Get one wrong and the editor 404s a hashed chunk and renders a blank canvas with no error. `scripts/build-e2e.mjs` sets them together for the e2e build.
+
+Requires a secure context (HTTPS, or `localhost`) — IndexedDB, service workers and the editor's workers all need one.
+
+---
+
+## Upstream sync
+
+Mosaic tracks `excalidraw/excalidraw`. A GitHub Action merges upstream daily and opens a **pull request** — it never auto-merges.
+
+```bash
+yarn sync-upstream              # Linux / macOS
+.\scripts\sync-upstream.ps1     # Windows PowerShell
+yarn sync-upstream:dry          # preview which files would conflict
+```
+
+On conflict: **branded files keep the Mosaic version, everything else takes upstream.** Branded files win because our product identity lives in a handful of files; upstream wins elsewhere so security and bug fixes land as-is.
+
+Full policy: [`UPSTREAM_SYNC.md`](UPSTREAM_SYNC.md). Machine-readable version that both the shell and PowerShell scripts read: `scripts/sync-upstream.policy.json`.
+
+---
+
+## Layout
+
+```
+excalidraw-app/     editor app + board mode (bridge to the dashboard)
+packages/           excalidraw/* packages + mosaic-brand
+mosaic-dashboard/   dashboard app (boards, folders, activity, trash)
+docker/             nginx config
+scripts/
+  brand/            rebrand tooling + verification
+  sync-upstream.*   upstream merge (bash + PowerShell)
+  build-e2e.mjs     cross-platform e2e build with matching base paths
+  screenshots.js    regenerates README images
+memory/             project notes — read MEMORY.md before changing anything
+docs/               README screenshots
+```
+
+`memory/MEMORY.md` records the traps: what must **never** be renamed, the Windows-specific pitfalls, and which test failures are pre-existing noise.
+
+---
+
+## Upstream-only workflows
+
+Four inherited GitHub Actions are disabled because they target the upstream project's accounts and secrets (`*.yml.disabled`). Reasons are in [`.github/workflows/README.md`](.github/workflows/README.md).
+
+---
 
 ## Contributing
 
-- Missing something or found a bug? [Report here](https://github.com/excalidraw/excalidraw/issues).
-- Want to contribute? Check out our [contribution guide](https://docs.excalidraw.com/docs/introduction/contributing) or let us know on [Discord](https://discord.gg/UexuTaE).
-- Want to help with translations? See the [translation guide](https://docs.excalidraw.com/docs/introduction/contributing#translating).
+See [CONTRIBUTING.md](CONTRIBUTING.md). The short version:
 
-## Integrations
+- do not rename internal identifiers — `yarn verify:brand` will fail
+- `yarn test:code` runs with `--max-warnings=0`; warnings are errors
+- keep every UI string going through `t()` in the dashboard, and through the locale files in the editor
 
-- [VScode extension](https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor)
-- [npm package](https://www.npmjs.com/package/@excalidraw/excalidraw)
+## Security
 
-## Who's integrating Excalidraw
+See [SECURITY.md](SECURITY.md).
 
-[Google Cloud](https://googlecloudcheatsheet.withgoogle.com/architecture) • [Meta](https://meta.com/) • [CodeSandbox](https://codesandbox.io/) • [Obsidian Excalidraw](https://github.com/zsviczian/obsidian-excalidraw-plugin) • [Replit](https://replit.com/) • [Slite](https://slite.com/) • [Notion](https://notion.so/) • [HackerRank](https://www.hackerrank.com/) • and many others
+## License
 
-## Sponsors & support
-
-If you like the project, you can become a sponsor at [Open Collective](https://opencollective.com/excalidraw) or use [Excalidraw+](https://plus.excalidraw.com/).
-
-## Thank you for supporting Excalidraw
-
-[<img src="https://opencollective.com/excalidraw/tiers/sponsors/0/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/0/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/1/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/1/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/2/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/2/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/3/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/3/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/4/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/4/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/5/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/5/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/6/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/6/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/7/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/7/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/8/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/8/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/9/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/9/website) [<img src="https://opencollective.com/excalidraw/tiers/sponsors/10/avatar.svg?avatarHeight=120"/>](https://opencollective.com/excalidraw/tiers/sponsors/10/website)
-
-<a href="https://opencollective.com/excalidraw#category-CONTRIBUTE" target="_blank"><img src="https://opencollective.com/excalidraw/tiers/backers.svg?avatarHeight=32"/></a>
-
-Last but not least, we're thankful to these companies for offering their services for free:
-
-[![Vercel](./.github/assets/vercel.svg)](https://vercel.com) [![Sentry](./.github/assets/sentry.svg)](https://sentry.io) [![Crowdin](./.github/assets/crowdin.svg)](https://crowdin.com)
+[MIT](LICENSE) — Mosaic is a fork of Excalidraw, which is MIT licensed. See [NOTICE](NOTICE) for attribution. The upstream copyright notice is preserved verbatim and must not be altered.

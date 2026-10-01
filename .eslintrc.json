@@ -67,7 +67,7 @@
       }
     },
     {
-      "files": ["scripts/build-e2e.mjs", "mosaic-dashboard/e2e/preview-server.mjs", "mosaic-dashboard/e2e/global-setup.ts"],
+      "files": ["scripts/build-e2e.mjs", "scripts/screenshots.js", "mosaic-dashboard/e2e/preview-server.mjs", "mosaic-dashboard/e2e/global-setup.ts"],
       "rules": {
         "no-console": "off"
       }

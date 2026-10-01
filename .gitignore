@@ -39,3 +39,6 @@ mosaic-dashboard/node_modules
 
 # Root-level Playwright output when run from the repo root.
 test-results
+
+# Chrome profile created by scripts/screenshots.js.
+.screenshot-profile
