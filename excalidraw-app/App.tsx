@@ -149,6 +149,14 @@ import "./index.scss";
 import { ExcalidrawPlusPromoBanner } from "./components/ExcalidrawPlusPromoBanner";
 import { AppSidebar } from "./components/AppSidebar";
 
+import {
+  getBoardIdFromHash,
+  markBoardOpened,
+  parseStoredScene,
+  readBoardRecord,
+  startBoardAutosave,
+} from "./boardMode";
+
 import type { CollabAPI } from "./collab/Collab";
 
 polyfill();
@@ -560,6 +568,48 @@ const ExcalidrawWrapper = () => {
   useEffect(() => {
     if (!excalidrawAPI || (!isCollabDisabled && !collabAPI)) {
       return;
+    }
+
+    // Mosaic dashboard "board mode" (Part 2, STEP 6).
+    //
+    // Runs BEFORE initializeScene and returns early when active, so the editor's
+    // normal localStorage/share-link/collab initialisation is never reached in
+    // this mode — and, just as importantly, is untouched when it is not.
+    const boardId = getBoardIdFromHash();
+    if (boardId) {
+      let cancelled = false;
+      let disposeAutosave: (() => void) | undefined;
+
+      void (async () => {
+        const record = await readBoardRecord(boardId);
+        if (cancelled) {
+          return;
+        }
+        const stored = parseStoredScene(record?.scene);
+
+        initialStatePromiseRef.current.promise.resolve(
+          stored
+            ? {
+                elements: restoreElements(stored.elements as any, null, {
+                  repairBindings: true,
+                  deleteInvisibleElements: true,
+                }),
+                appState: restoreAppState(stored.appState as any, null),
+                ...(stored.files ? { files: stored.files as any } : {}),
+              }
+            : null,
+        );
+
+        await markBoardOpened(boardId);
+        if (!cancelled) {
+          disposeAutosave = startBoardAutosave(boardId, excalidrawAPI);
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+        disposeAutosave?.();
+      };
     }
 
     initializeScene({ collabAPI, excalidrawAPI }).then(async (data) => {
