@@ -121,6 +121,12 @@ jobs:
         # valuable check in this repo.
         run: yarn verify:brand
 
+      - name: Sync conflict-policy matcher
+        # The matcher that decides "keep our branding or take theirs" can fail
+        # silently — a pattern matching nothing sends every conflict to upstream
+        # with no error. It did exactly that once, so it is now tested.
+        run: yarn test:sync-policy
+
       - name: Build editor
         run: yarn build
 

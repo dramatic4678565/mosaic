@@ -66,18 +66,26 @@ Write-Log "upstream=$UpstreamRemote/$UpstreamBranch  branch=$SyncBranch"
 # ---------------------------------------------------------------------------
 
 # True when Mosaic's side wins for this path. Mirrors is_branded_file() in the
-# bash script: exact match, "dir/**" prefix, or "dir/*" prefix.
+# bash script.
+#
+# "path/to/file" is an exact match, "dir/*" covers direct children only, and
+# "dir/**" covers any depth. The distinction matters for the locales: the policy
+# names `en.json` exactly so the other 56 Crowdin-managed files correctly take
+# upstream.
 function Test-BrandedFile {
     param([string]$Path)
     foreach ($pattern in $OursPatterns) {
         if ($Path -eq $pattern) { return $true }
         if ($pattern.EndsWith('/**')) {
-            $dir = $pattern.Substring(0, $pattern.Length - 3)
-            if ($Path.StartsWith("$dir/")) { return $true }
+            $dir = $pattern.Substring(0, $pattern.Length - 2)
+            if ($Path.StartsWith($dir)) { return $true }
         }
-        elseif ($pattern.Contains('/') -and -not $pattern.EndsWith('*')) {
-            $dir = $pattern.Substring(0, $pattern.LastIndexOf('/'))
-            if ($Path.StartsWith("$dir/")) { return $true }
+        elseif ($pattern.Contains('/')) {
+            $dir = $pattern.Substring(0, $pattern.LastIndexOf('/')) + '/'
+            if ($Path.StartsWith($dir)) {
+                $rest = $Path.Substring($dir.Length)
+                if (-not $rest.Contains('/')) { return $true }
+            }
         }
     }
     return $false
