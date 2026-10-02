@@ -99,6 +99,20 @@ export default defineConfig({
     setupFiles: ["./setupTests.ts"],
     globals: true,
     environment: "jsdom",
+    /**
+     * Retry once before failing.
+     *
+     * This suite is timing-sensitive — canvas geometry, font measurement and
+     * `ResizeObserver` all depend on when layout settles — and a handful of
+     * tests fail intermittently on both Windows and the Linux CI runner while
+     * passing reliably in isolation. A pristine upstream worktree with zero
+     * local changes reproduces it, so it predates the Mosaic work.
+     *
+     * `retry: 1` rather than a blanket ignore: a genuinely broken test still
+     * fails, it just gets one clean environment to prove it. Anything more
+     * than this would be hiding failures.
+     */
+    retry: 1,
     // don't list skipped tests in the failure tree — keeps output readable
     hideSkippedTests: true,
     coverage: {

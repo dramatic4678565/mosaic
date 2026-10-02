@@ -94,8 +94,14 @@ jobs:
       - name: Typecheck
         run: yarn test:typecheck
 
-      - name: Unit tests (editor + dashboard)
-        run: yarn test:all
+      - name: Unit tests (editor)
+        # `test:all` also runs typecheck, lint and prettier. Those are separate
+        # steps above, so calling it here would repeat ~2 minutes of work and
+        # double the chance of an unrelated flake blocking the run.
+        run: yarn test:app --watch=false
+
+      - name: Unit tests (dashboard)
+        run: yarn test:dashboard
 
       - name: Rebrand guard
         # Fails if a bulk edit renamed an internal identifier, a localStorage key,
