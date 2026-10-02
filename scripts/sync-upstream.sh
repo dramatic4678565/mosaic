@@ -43,19 +43,38 @@ die()  { printf '\033[1;31mFAIL\033[0m %s\n' "$*" >&2; exit 1; }
 # ---------------------------------------------------------------------------
 
 # Files where Mosaic's version wins, per the shared policy.
+#
+# Pattern shapes and what they mean:
+#   "path/to/file"   exact match only
+#   "dir/*"          direct children of dir/ only
+#   "dir/**"         anything under dir/, at any depth
+#
+# The one-level vs many-level distinction is NOT cosmetic. The locales case is
+# why: the policy lists `packages/excalidraw/locales/en.json` by exact name
+# precisely so `de-DE.json`, `zh-CN.json` and the other 56 Crowdin-managed
+# locales do not match and correctly take upstream. Treating `dir/*` as
+# "recursive" would let one broad pattern quietly hand every translation
+# upstream and discard the rebrand of them.
 is_branded_file() {
-  local path="$1" pattern
+  local path="$1" pattern dir rest
   for pattern in "${OURS_PATTERNS[@]}"; do
-    if [[ "$path" == $pattern ]]; then
+    if [[ "$path" == "$pattern" ]]; then
       return 0
     fi
-    # "dir/**" matches anything under dir/
-    if [[ "$pattern" == *"/**" && "$path" == "${pattern%/**}"/* ]]; then
-      return 0
-    fi
-    # "dir/*" matches a direct child (and, harmlessly, nothing deeper)
-    if [[ "$pattern" == *"/*" && "$path" == "${pattern%/*}"/* ]]; then
-      return 0
+    if [[ "$pattern" == *"/**" ]]; then
+      dir="${pattern%/**}/"
+      if [[ "$path" == "$dir"* ]]; then
+        return 0
+      fi
+    elif [[ "$pattern" == *"/*" ]]; then
+      dir="${pattern%/*}/"
+      if [[ "$path" == "$dir"* ]]; then
+        rest="${path#"$dir"}"
+        # Direct child only: a slash in the remainder means it is nested deeper.
+        if [[ "$rest" != */* ]]; then
+          return 0
+        fi
+      fi
     fi
   done
   return 1

@@ -25,15 +25,25 @@ These are matched as globs against the repository root. A file matching **any** 
 
 | Pattern | What it is | Why Mosaic wins |
 | --- | --- | --- |
-| `mosaic-brand/*` | brand directions + the vendored logo SVGs | source artwork; upstream has no equivalent |
-| `packages/mosaic-brand/*` | `@mosaic/brand` — the brand constants package | Mosaic-only package |
-| `excalidraw-app/public/*` | favicons, PWA icons, OG image | regenerated Mosaic artwork |
+| `mosaic-brand/**` | brand directions + the vendored logo SVGs | source artwork; upstream has no equivalent |
+| `packages/mosaic-brand/**` | `@mosaic/brand` — the brand constants package | Mosaic-only package |
+| `excalidraw-app/public/**` | favicons, PWA icons, OG image | regenerated Mosaic artwork |
 | `packages/excalidraw/locales/en.json` | English strings | contains the rebranded product name |
-| `scripts/brand/*` | rebrand + verification tooling | Mosaic-only |
-| `memory/*` | project memory notes | Mosaic-only |
+| `scripts/brand/**` | rebrand + verification tooling | Mosaic-only |
+| `memory/**` | project memory notes | Mosaic-only |
 | `REBRAND.md`, `UPSTREAM_SYNC.md`, `NOTICE` | Mosaic docs | Mosaic-only |
 
 `*.locale/en.json` in the original spec maps to `packages/excalidraw/locales/en.json` in this repo — there is no `*.locale/` directory here. **Only the English file is branded.** The other 57 locales are managed by Crowdin and must take upstream, or a sync would clobber translated copy that upstream has since fixed.
+
+**`**`matches at any depth;`*`would match only a direct child.** That distinction is load-bearing, which is why it is tested.`en.json`is listed **by exact name** precisely so`de-DE.json`, `zh-CN.json` and the other 56 Crowdin-managed locales do *not\* match and correctly take upstream. A matcher that treated directory patterns as recursive-when-they-are-not would quietly discard the rebrand of every translation, on every sync, silently.
+
+### Testing the matcher
+
+```bash
+yarn test:sync-policy
+```
+
+The matcher decides "keep our branding or take theirs" and can fail _silently_ � a pattern that matches nothing sends everything to upstream with no error at all. It had exactly that bug once (`memory/*` and `scripts/brand/*` matched nothing), and the first fix over-corrected into also matching `de-DE.json`. Both were caught by this test, so it runs in CI.
 
 ## Everything else (upstream wins)
 

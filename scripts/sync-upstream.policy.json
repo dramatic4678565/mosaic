@@ -5,15 +5,15 @@
   "prLabel": "upstream-sync",
   "branchPrefix": "upstream-sync",
 
-  "oursPatterns": ["mosaic-brand/*", "packages/mosaic-brand/*", "excalidraw-app/public/*", "packages/excalidraw/locales/en.json", "scripts/brand/*", "memory/*", "REBRAND.md", "UPSTREAM_SYNC.md", "NOTICE", "mosaic-dashboard/**"],
+  "oursPatterns": ["mosaic-brand/**", "packages/mosaic-brand/**", "excalidraw-app/public/**", "packages/excalidraw/locales/en.json", "scripts/brand/**", "memory/**", "REBRAND.md", "UPSTREAM_SYNC.md", "NOTICE", "mosaic-dashboard/**"],
 
   "oursRationale": {
-    "mosaic-brand/*": "source artwork; upstream has no equivalent",
-    "packages/mosaic-brand/*": "Mosaic-only brand constants package",
-    "excalidraw-app/public/*": "regenerated Mosaic favicons/PWA/OG artwork",
+    "mosaic-brand/**": "source artwork; upstream has no equivalent",
+    "packages/mosaic-brand/**": "Mosaic-only brand constants package",
+    "excalidraw-app/public/**": "regenerated Mosaic favicons/PWA/OG artwork",
     "packages/excalidraw/locales/en.json": "contains the rebranded product name; the other 57 locales are Crowdin-managed and must take upstream",
-    "scripts/brand/*": "Mosaic-only rebrand and verification tooling",
-    "memory/*": "Mosaic-only project memory notes",
+    "scripts/brand/**": "Mosaic-only rebrand and verification tooling",
+    "memory/**": "Mosaic-only project memory notes",
     "mosaic-dashboard/**": "Mosaic-only dashboard app; upstream has no counterpart, so this only matters if a future upstream adds a colliding path"
   },
 
