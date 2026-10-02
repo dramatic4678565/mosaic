@@ -48,13 +48,30 @@ COPY . .
 
 ARG NODE_ENV=production
 
-# Both workspaces, in dependency order. `build:all` is the repo's own script.
-RUN npm_config_target_arch=${TARGETARCH} yarn build:all
+# Both workspaces, in dependency order.
+#
+# The two base paths must match how the apps are *mounted*, or the editor's
+# built index.html references its hashed chunks at the wrong URL and the app
+# renders a blank canvas with no console error:
+#
+#   editor    -> /app/   (nginx serves it under /app/)
+#   dashboard -> /       (it is the site root; VITE_EDITOR_BASE points back at /app/)
+#
+# Setting only the server-side mount is not enough -- the *build* has to know.
+RUN npm_config_target_arch=${TARGETARCH} \
+    EXCALIDRAW_BASE_PATH=/app \
+    VITE_EDITOR_BASE=/app \
+    yarn build:all
 
 # Fail the build rather than shipping an image whose routes 404. The editor has
 # to be checked at /app/ because that is the mounted path, not /.
 RUN test -f /opt/mosaic/mosaic-dashboard/dist/index.html \
  && test -f /opt/mosaic/excalidraw-app/build/index.html
+
+# Assert the editor's built HTML references its own mount point. A mismatch here
+# is the blank-canvas failure mode: index.html loads, the chunks 404, and nothing
+# reports an error.
+RUN grep -q '/app/assets/index-' /opt/mosaic/excalidraw-app/build/index.html
 
 # ---------------------------------------------------------------------------
 # Stage 2 — serve
