@@ -296,7 +296,21 @@ if [[ "$OPEN_PR" == "0" ]]; then
   exit 0
 fi
 
-git push -u origin "$SYNC_BRANCH"
+# Force-with-lease, and why it is safe here.
+#
+# A re-run on the same day (manual dispatch, or the cron firing after a previous
+# run) recreates `upstream-sync/<date>` with different history, so a plain push
+# is rejected as non-fast-forward. That left the branch pushed by the first run
+# and the second run reporting a push failure with no PR and no sync.
+#
+# This branch is bot-owned, dated, and never hand-edited, so rewriting it is the
+# correct action — and `--force-with-lease` (not `--force`) refuses to do it if
+# anyone else has moved the branch since the last fetch, which is the only
+# scenario where clobbering would lose someone else's work.
+log "pushing $SYNC_BRANCH"
+if ! git push --force-with-lease -u origin "$SYNC_BRANCH"; then
+  die "could not push $SYNC_BRANCH (non-fast-forward and no matching lease). If a previous run pushed this branch, fetch and inspect before retrying."
+fi
 
 # ---------------------------------------------------------------------------
 # Open the PR
