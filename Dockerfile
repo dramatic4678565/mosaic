@@ -90,6 +90,14 @@ COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 # register it and offline support silently dies.
 RUN sed -i 's#/sw.js#/app/sw.js#' /usr/share/nginx/html/app/index.html 2>/dev/null || true
 
+# Validate the config during the build, not at runtime.
+#
+# A bad nginx.conf otherwise passes the whole multi-stage build and only fails
+# when someone starts the container — which is exactly how a `{8,}` regex
+# reached production once. `nginx -t` needs the html directory to exist, which
+# the COPYs above have already created.
+RUN nginx -t
+
 # 8080 is the unprivileged image's default and is what nginx.conf listens on.
 EXPOSE 8080
 
