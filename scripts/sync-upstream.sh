@@ -298,18 +298,39 @@ fi
 
 git push -u origin "$SYNC_BRANCH"
 
-# Ensure the label exists before using it, so the PR is actually labelled.
-if command -v gh >/dev/null 2>&1; then
-  gh label create "$PR_LABEL" --color "0E8A16" --description "Automated sync from excalidraw/excalidraw" 2>/dev/null || true
+# ---------------------------------------------------------------------------
+# Open the PR
+#
+# Ordering matters: the PR is created first and the label applied afterwards.
+# `gh pr create --label x` fails outright when label x does not exist, so
+# creating the label first and *silencing* its failure left a run that merged,
+# built, pushed — and then reported "could not open the PR" with no reason.
+# Two independent steps, each with its own diagnostic, cannot mask each other.
+# ---------------------------------------------------------------------------
+if ! command -v gh >/dev/null 2>&1; then
+  warn "'gh' not found; branch pushed to $SYNC_BRANCH but no PR opened"
+  exit 0
+fi
 
-  PR_URL="$(gh pr create \
-    --label "$PR_LABEL" \
-    --title "chore(upstream): sync with upstream/master ($(git rev-parse --short "$UPSTREAM_REMOTE/$UPSTREAM_BRANCH"))" \
-    --body "$(sync_pr_body "$UPSTREAM_REMOTE/$UPSTREAM_BRANCH" "$BEHIND")")" || true
+PR_BODY_FILE="$(mktemp)"
+trap 'rm -f "$PR_BODY_FILE"' EXIT
+sync_pr_body "$UPSTREAM_REMOTE/$UPSTREAM_BRANCH" "$BEHIND" > "$PR_BODY_FILE"
 
-  if [[ -n "$PR_URL" ]]; then
-    log "PR opened: $PR_URL"
-  else
-    warn "could not open the PR (gh may be unauthenticated)"
+PR_TITLE="chore(upstream): sync with upstream/master ($(git rev-parse --short "$UPSTREAM_REMOTE/$UPSTREAM_BRANCH"))"
+
+if PR_URL="$(gh pr create --title "$PR_TITLE" --body-file "$PR_BODY_FILE" 2>&1)"; then
+  log "PR opened: $PR_URL"
+
+  # Label last, and tolerantly: a missing label must never look like a failed
+  # sync.
+  gh label create "$PR_LABEL" --color "0E8A16" \
+    --description "Automated sync from excalidraw/excalidraw" >/dev/null 2>&1 || true
+  if ! gh pr edit "$PR_URL" --add-label "$PR_LABEL" >/dev/null 2>&1; then
+    warn "PR opened but label '$PR_LABEL' could not be applied"
   fi
+else
+  warn "could not open the PR. gh said:"
+  printf '%s\n' "$PR_URL" | sed 's/^/    /' >&2
+  warn "branch $SYNC_BRANCH was pushed; open the PR manually:"
+  warn "  gh pr create --base main --head $SYNC_BRANCH --title '$PR_TITLE'"
 fi
