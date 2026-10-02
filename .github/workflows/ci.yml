@@ -63,7 +63,9 @@ jobs:
           git remote add upstream https://github.com/excalidraw/excalidraw.git
           git fetch upstream master
           git rev-parse --verify upstream/master
-          # Sanity: the baseline must actually be reachable.
+          # Sanity: the baseline the guard will use (the merge base) must be
+          # actually grep-able. Verifies upstream/master itself as a proxy —
+          # if that fails, the merge base will too.
           git grep -c -e 'from "@excalidraw/' upstream/master -- packages >/dev/null
 
       # Restore the dependency cache directly as well. setup-node's `cache:

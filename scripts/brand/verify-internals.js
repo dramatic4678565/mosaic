@@ -9,7 +9,40 @@ import { execFileSync } from "child_process";
 const run = (args) =>
   execFileSync("git", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
 
-const BASE = "upstream/master";
+/**
+ * The baseline is the **merge base** with upstream, not `upstream/master`'s tip.
+ *
+ * That distinction matters and cost a CI cycle to learn. Comparing raw
+ * occurrence counts against upstream's tip produces a false "occurrences were
+ * REMOVED" whenever upstream has *added* code we have not merged yet: those
+ * occurrences are new upstream code, not renames on our side. Counting them as
+ * "present upstream, absent here" blames us for code we have simply never
+ * taken.
+ *
+ * The merge base is the upstream commit we actually forked from (or last
+ * synced). "Did a rebrand remove something that was ours?" is exactly the
+ * question this guard should answer.
+ *
+ * Falls back to `upstream/master` when there is no merge base — e.g. a
+ * repository created from a shallow copy with no shared history.
+ */
+const resolveBaseline = () => {
+  try {
+    const base = run([
+      "merge-base",
+      "HEAD",
+      "upstream/master",
+    ]).trim();
+    if (base) {
+      return base;
+    }
+  } catch {
+    // No shared history; fall through.
+  }
+  return "upstream/master";
+};
+
+const BASE = resolveBaseline();
 
 /**
  * Fail fast, and legibly, when the baseline ref is missing.
@@ -24,10 +57,10 @@ try {
 } catch {
   console.error(
     `\nBaseline ref "${BASE}" is not available in this checkout.\n` +
-      "This guard compares the working tree against upstream to prove no\n" +
-      "internal identifier was renamed, so it needs that ref:\n\n" +
+      "This guard compares the working tree against the upstream commit we\n" +
+      "forked from, so it needs upstream available:\n\n" +
       "  git remote add upstream https://github.com/excalidraw/excalidraw.git\n" +
-      "  git fetch --depth=1 upstream master\n",
+      "  git fetch upstream master\n",
   );
   process.exit(1);
 }
@@ -151,7 +184,7 @@ const MOSAIC_OWNED_EXCLUDES = [
 
 const UPSTREAM_PATHS = ["packages", "excalidraw-app"];
 
-console.log("=== INTERNAL identifiers (must be unchanged) ===\n");
+console.log(`=== INTERNAL identifiers (baseline: ${BASE.slice(0, 12)}) ===\n`);
 allOk =
   check(
     "@excalidraw/* imports (code, comments ignored)",
