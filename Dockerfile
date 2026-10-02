@@ -69,8 +69,13 @@ RUN test -f /opt/mosaic/mosaic-dashboard/dist/index.html \
 # needs no writable /var paths.
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS serve
 
-# Replace the stock site, then drop both builds in.
-RUN rm -rf /usr/share/nginx/html/*
+# No `rm -rf /usr/share/nginx/html/*` here. This base image already runs as the
+# non-root `nginx` user, so it cannot delete the root-owned stock files in
+# /usr/share/nginx/html and the build fails with "Permission denied". `COPY` below
+# overwrites index.html anyway, and the two stock files that would remain
+# (50x.html, and a favicon we do not ship) are unreachable from any route we
+# serve. Deleting them as root and dropping privileges would work but is more
+# machinery for no benefit.
 
 # Dashboard at the root.
 COPY --from=build /opt/mosaic/mosaic-dashboard/dist /usr/share/nginx/html
