@@ -95,6 +95,26 @@ jobs:
           git fetch upstream master
           git checkout -b upstream-sync-runner
 
+      - name: Report token permissions
+        # Diagnostics. `gh pr create` has failed with
+        #   GraphQL: Resource not accessible by integration (createPullRequest)
+        # which names permissions generically and does not say *which* grant is
+        # missing. This step prints the actual effective permissions so the next
+        # occurrence is diagnosable from the log instead of by guesswork.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "### effective permissions"
+          gh api "repos/${{ github.repository }}/actions/permissions/workflow" \
+            --jq '.default_workflow_permissions + " / can_approve_pull_request_reviews=" + (.can_approve_pull_request_reviews|tostring)' || true
+          echo "### token identity"
+          gh api user --jq .login 2>/dev/null \
+            || echo "(GITHUB_TOKEN cannot read /user - expected)"
+          echo "### token scopes"
+          curl -sI -H "Authorization: Bearer $GH_TOKEN" \
+            https://api.github.com/user | grep -i "^x-oauth-scopes" || \
+            echo "(no scope header - expected for an installation token)"
+
       # The script itself does the install/build/test/PR dance, so CI and a
       # developer's laptop follow exactly the same path.
       - name: Run sync
