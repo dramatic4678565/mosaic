@@ -28,11 +28,7 @@ const run = (args) =>
  */
 const resolveBaseline = () => {
   try {
-    const base = run([
-      "merge-base",
-      "HEAD",
-      "upstream/master",
-    ]).trim();
+    const base = run(["merge-base", "HEAD", "upstream/master"]).trim();
     if (base) {
       return base;
     }
