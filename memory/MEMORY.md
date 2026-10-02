@@ -25,7 +25,32 @@ Three values have to agree, and they live in three different places because each
 
 Get one wrong and the editor 404s a hashed chunk and renders a blank canvas with **no error**. `scripts/build-e2e.mjs` sets them together for the e2e build.
 
-`scripts/sync-upstream.policy.json` is the single source of truth for sync conflict resolution; `scripts/sync-upstream.sh` and `.ps1` both read it. Do not duplicate those patterns into a script.
+`scripts/sync-upstream.policy.json` is the single source of truth for sync
+conflict resolution; `scripts/sync-upstream.sh` and `.ps1` both read it. Do not
+duplicate those patterns into a script.
+
+### Upstream sync needs a repository setting, not just workflow permissions
+
+If the sync pushes its branch and then fails at `gh pr create` with
+`GraphQL: Resource not accessible by integration (createPullRequest)`, the
+workflow's `permissions:` block is fine and something else is wrong.
+
+GitHub has **two independent settings**. The workflow declares
+`pull-requests: write`, but that alone does not let `GITHUB_TOKEN` open a PR.
+The repository must also have
+
+> Settings → Actions → General → Workflow permissions →
+> "Allow GitHub Actions to create and approve pull requests"
+
+enabled. In the API that is `can_approve_pull_request_reviews`:
+
+```bash
+gh api --method PUT repos/dramatic4678565/mosaic/actions/permissions/workflow \
+  -f default_workflow_permissions=write -F can_approve_pull_request_reviews=true
+```
+
+This cost three CI cycles to diagnose, because the workflow file looks correct
+and the error names permissions generically. It is currently enabled.
 
 ---
 

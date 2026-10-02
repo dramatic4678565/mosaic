@@ -28,6 +28,21 @@ permissions:
   pull-requests: write # open the PR
   issues: write # file an issue when the build is red
 
+# NOTE ON REPOSITORY SETTINGS
+#
+# The block above is necessary but was not sufficient: this workflow also needs
+# the repository-level toggle
+#   Settings -> Actions -> General -> Workflow permissions ->
+#   "Allow GitHub Actions to create and approve pull requests"
+# enabled, which maps to `can_approve_pull_request_reviews` in the API. With it
+# off, `gh pr create` fails with
+#   GraphQL: Resource not accessible by integration (createPullRequest)
+# even though the workflow declares `pull-requests: write` — the two settings are
+# independent and only the second one unlocks PR creation by GITHUB_TOKEN.
+#
+# It is currently enabled. If the sync ever fails at exactly that GraphQL error
+# after having pushed its branch, check this toggle first.
+
 concurrency:
   # One sync at a time. Two overlapping runs would race on the same
   # upstream-sync/<date> branch name.
