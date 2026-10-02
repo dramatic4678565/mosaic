@@ -35,6 +35,9 @@ jobs:
             editor
             packages/excalidraw
             packages/utils
+            dashboard
+            brand
+            upstream
             docker
             repo
           ignoreLabels: |
@@ -59,7 +62,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          scope_labels=(s-app s-editor s-package)
+          scope_labels=(s-app s-editor s-package s-dashboard s-brand s-upstream s-docker)
 
           readarray -t desired_labels < <(
             node <<'NODE'
@@ -73,6 +76,14 @@ jobs:
               labels.add("s-app");
             } else if (scope === "editor") {
               labels.add("s-editor");
+            } else if (scope === "dashboard") {
+              labels.add("s-dashboard");
+            } else if (scope === "brand") {
+              labels.add("s-brand");
+            } else if (scope === "upstream") {
+              labels.add("s-upstream");
+            } else if (scope === "docker") {
+              labels.add("s-docker");
             } else if (scope.startsWith("packages/")) {
               labels.add("s-package");
             }

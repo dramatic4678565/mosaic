@@ -367,7 +367,7 @@ PR_BODY_FILE="$(mktemp)"
 trap 'rm -f "$PR_BODY_FILE"' EXIT
 sync_pr_body "$UPSTREAM_REMOTE/$UPSTREAM_BRANCH" "$BEHIND" > "$PR_BODY_FILE"
 
-PR_TITLE="chore(upstream): sync with upstream/master ($(git rev-parse --short "$UPSTREAM_REMOTE/$UPSTREAM_BRANCH"))"
+PR_TITLE="chore(repo): sync with upstream/master ($(git rev-parse --short "$UPSTREAM_REMOTE/$UPSTREAM_BRANCH"))"
 
 if PR_URL="$(gh pr create --title "$PR_TITLE" --body-file "$PR_BODY_FILE" 2>&1)"; then
   log "PR opened: $PR_URL"
