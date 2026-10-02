@@ -40,6 +40,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          # Full history, and not just for tidiness.
+          #
+          # Mosaic's first commits sit directly on top of Excalidraw's — the
+          # repo was cloned from upstream — so `git merge-base HEAD
+          # upstream/master` is what tells the rebrand guard which upstream
+          # commit we forked from. With the default depth-1 checkout that commit
+          # is not present, the merge base cannot be computed, and the guard
+          # silently falls back to comparing against upstream's *tip* — which
+          # then reports every import upstream has added since as "removed".
+          # Cost is one extra checkout of a few tens of MB.
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4

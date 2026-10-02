@@ -33,8 +33,19 @@ const resolveBaseline = () => {
       return base;
     }
   } catch {
-    // No shared history; fall through.
+    // No shared history, or the history is not present locally.
   }
+  // Loud on purpose. Falling back to upstream's tip makes the guard report
+  // every import upstream has *added* since our fork as "removed", which looks
+  // exactly like a rebrand mistake. A silent fallback produced two false CI
+  // failures before this warning existed.
+  console.warn(
+    "WARNING: could not compute the merge base with upstream/master.\n" +
+      "         Falling back to upstream's tip, which may report false\n" +
+      "         'occurrences were REMOVED' for code upstream has added\n" +
+      "         since the fork. Fetch full history:\n\n" +
+      "           git fetch --unshallow || git fetch --depth=1000\n",
+  );
   return "upstream/master";
 };
 
