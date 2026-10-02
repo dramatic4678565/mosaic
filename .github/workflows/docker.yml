@@ -80,18 +80,34 @@ jobs:
         # Pull it back and assert both routes respond, so a broken publish is
         # caught here rather than by whoever runs it next.
         #
-        # On failure the container's own logs are dumped: "could not connect"
-        # is otherwise indistinguishable from "nginx exited on startup" versus
-        # "nginx started but 404s", which is exactly the ambiguity that cost a
-        # debugging cycle on the first run of this workflow.
+        # The wait loop matters: `docker run -d` returns as soon as the container
+        # is *created*, which is before nginx has bound its socket. Probing
+        # immediately gives a false "did not serve" on a perfectly good image —
+        # which is exactly what happened on the first two runs of this workflow.
+        #
+        # `127.0.0.1` rather than `localhost`: the runner may resolve localhost
+        # to ::1, which this container does not listen on.
+        #
+        # On failure the container state and logs are dumped, because "could not
+        # connect" cannot otherwise distinguish "nginx exited" from "nginx
+        # 404s" from "we probed too early".
         run: |
-          set -euo pipefail
+          set -uo pipefail
           IMAGE="$(echo "${{ steps.meta.outputs.tags }}" | head -n1)"
           docker pull "$IMAGE"
           docker rm -f mosaic-smoke >/dev/null 2>&1 || true
           docker run -d --name mosaic-smoke -p 8080:8080 "$IMAGE" >/dev/null
 
-          if ! curl -fsS http://localhost:8080/ >/dev/null 2>&1; then
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 5 http://127.0.0.1:8080/ >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+
+          if [ "$ready" != "1" ]; then
             echo "::group::container state"
             docker ps -a --filter name=mosaic-smoke
             echo "::endgroup::"
@@ -104,13 +120,13 @@ jobs:
           fi
 
           echo "--- / (dashboard) ---"
-          curl -fsS http://localhost:8080/ | grep -o "<title>[^<]*</title>"
+          curl -fsS http://127.0.0.1:8080/ | grep -o "<title>[^<]*</title>"
           echo "--- /app/ (editor) ---"
-          curl -fsS http://localhost:8080/app/ | grep -o "<title>[^<]*</title>"
+          curl -fsS http://127.0.0.1:8080/app/ | grep -o "<title>[^<]*</title>"
           # A hashed asset must be reachable; a 404 here is the silent failure
           # mode where the shell renders but the app never boots.
-          ASSET="$(curl -fsS http://localhost:8080/app/ | grep -o '/app/assets/index-[^"]*\.js' | head -n1)"
+          ASSET="$(curl -fsS http://127.0.0.1:8080/app/ | grep -o '/app/assets/index-[^"]*\.js' | head -n1)"
           test -n "$ASSET"
-          curl -fsS -o /dev/null -w "asset %{http_code}\n" "http://localhost:8080$ASSET"
+          curl -fsS -o /dev/null -w "asset %{http_code}\n" "http://127.0.0.1:8080$ASSET"
 
           docker rm -f mosaic-smoke >/dev/null
