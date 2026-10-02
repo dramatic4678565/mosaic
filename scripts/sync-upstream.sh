@@ -81,10 +81,28 @@ failure_report() {
   git branch -D "$SYNC_BRANCH" >/dev/null 2>&1 || true
 
   if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    gh issue create \
-      --title "Upstream sync failed at ${stage} ($(date +%F))" \
-      --label "$PR_LABEL" \
-      --body "$(failure_issue_body "$stage" "$diff")" || warn "could not open the issue"
+    local body_file
+    body_file="$(mktemp)"
+    failure_issue_body "$stage" "$diff" > "$body_file"
+
+    # Create the label first, then the issue *without* --label, then apply the
+    # label. `gh issue create --label x` fails outright when x does not exist,
+    # and this is the failure path — the worst possible moment to swallow an
+    # error silently, because the issue is the only record that the sync failed.
+    gh label create "$PR_LABEL" --color "0E8A16" \
+      --description "Automated sync from excalidraw/excalidraw" >/dev/null 2>&1 || true
+
+    local issue_url
+    if issue_url="$(gh issue create \
+          --title "Upstream sync failed at ${stage} ($(date +%F))" \
+          --body-file "$body_file" 2>&1)"; then
+      gh issue edit "$issue_url" --add-label "$PR_LABEL" >/dev/null 2>&1 || true
+      warn "issue opened: $issue_url"
+    else
+      warn "could not open the issue. gh said:"
+      printf '%s\n' "$issue_url" | sed 's/^/    /' >&2
+    fi
+    rm -f "$body_file"
   else
     warn "not pushing anything. Inspect the failure locally:"
     warn "  git checkout main && git merge $UPSTREAM_REMOTE/$UPSTREAM_BRANCH"
