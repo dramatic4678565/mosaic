@@ -28,7 +28,18 @@ const EDITOR_BASE = "/editor";
 
 export default defineConfig({
   testDir: "./e2e",
-  // Builds both apps and serves them. See the note above.
+  /**
+   * `dev-smoke.spec.ts` is excluded here on purpose: it drives the *dev servers*
+   * started by `yarn start`, which do not exist during this run (this config
+   * builds the apps and serves them itself). It has its own config,
+   * `playwright.dev.config.ts`, run with `yarn test:e2e:dev`.
+   *
+   * `menu-hide.spec.ts` is deliberately NOT excluded. Hiding the upstream menu
+   * items is a shipped behaviour, so it is verified against the built bundle
+   * rather than only against a dev server.
+   */
+  testIgnore: /dev-smoke\.spec\.ts/,
+  // Warms the served bundles. See the file for why.
   globalSetup: "./e2e/global-setup.ts",
   // Serial: every spec shares one IndexedDB origin and one server, so parallel
   // workers would stomp on each other's boards.

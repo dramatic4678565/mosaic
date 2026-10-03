@@ -11,4 +11,4 @@ dev-dist
 coverage
 mosaic-dashboard/test-results
 mosaic-dashboard/playwright-report
-mosaic-dashboard/blob-report
+mosaic-dashboard/blob-reportmosaic-dashboard/test-results-dev

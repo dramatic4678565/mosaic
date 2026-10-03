@@ -68,3 +68,37 @@ export const ATTRIBUTION = {
   license: "MIT",
   repository: "https://github.com/excalidraw/excalidraw",
 } as const;
+
+/**
+ * Runtime switches for parts of the inherited upstream UI.
+ *
+ * Why flags rather than deleted code:
+ *
+ * Everything gated below is upstream code we still license and still ship in the
+ * bundle. Mosaic does not offer Excalidraw+, is not the Excalidraw project, and
+ * has no social accounts, so surfacing those links misrepresents who Mosaic is
+ * and points users at a third party's paid product or channels. But deleting the
+ * JSX would make the code impossible to restore without hand-reconstructing it
+ * from upstream, and would diverge further from upstream on every future sync.
+ *
+ * A flag keeps the code exactly where upstream put it — which also means an
+ * upstream sync rarely conflicts here — while making it not render.
+ *
+ * All flags default to `false`. Flipping one is a one-line change; no component,
+ * import or upstream file has to be edited.
+ */
+export const FEATURE_FLAGS = {
+  /** "Excalidraw+" upsell, which links to plus.excalidraw.com. */
+  showExcalidrawPlus: false,
+  /**
+   * Upstream social links as a group: GitHub, "Follow us" (X), and
+   * "Discord chat". They are one component upstream, so they are one flag here.
+   */
+  showUpstreamLinks: false,
+  /**
+   * "Sign up" / "Sign in" for an Excalidraw account. Mosaic has no accounts —
+   * it is local-first — so this currently points at a service that cannot know
+   * the user exists.
+   */
+  showSignup: false,
+} as const;

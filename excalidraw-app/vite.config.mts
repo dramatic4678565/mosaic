@@ -14,28 +14,57 @@ export default defineConfig(({ mode }) => {
   // https://vitejs.dev/config/
   return {
     /**
-     * Public base path, overridable via `EXCALIDRAW_BASE_PATH`.
+     * Public base path.
      *
-     * Defaults to "/", i.e. the editor's normal standalone deployment, which is
-     * what production uses (nginx serves it at the root).
+     * Resolution order:
+     *   1. `process.env.EXCALIDRAW_BASE_PATH` - what Docker and the e2e build
+     *      set, because they mount the editor somewhere specific.
+     *   2. `VITE_MOSAIC_EDITOR_BASE` from `.env.development` - local dev, so
+     *      the path lives in a tracked file instead of an inline `FOO=bar`
+     *      prefix, which is POSIX-only and silently does the wrong thing in
+     *      cmd.exe.
+     *   3. "/" - the plain standalone case.
      *
-     * The dashboard mounts the editor in an iframe under `/editor/`. For the
-     * dev proxy in `mosaic-dashboard/vite.config.mts` to work, the editor's dev
-     * server must emit `/editor/`-prefixed module URLs — otherwise its
-     * transformed imports ("/App.tsx", "/@vite/client") are requested from the
-     * *dashboard's* origin, which does not have the editor's module graph and
-     * answers 404. Setting the base fixes that by making every generated URL
-     * absolute with the right prefix.
-     *
-     * This is read from `process.env` rather than the editor's own env files
-     * because it is a *deployment* concern (who is mounting me), not a feature
-     * flag, and it must be visible to the dashboard's Playwright config too.
+     * In local dev the editor is mounted at `/editor` because the dashboard's
+     * dev server proxies `/editor` here so the two share one origin (and
+     * therefore one IndexedDB). The `mosaic-root-redirect` plugin below keeps
+     * "/" working for anyone who wants the editor on its own.
      */
-    base: process.env.EXCALIDRAW_BASE_PATH ?? "/",
+    base:
+      process.env.EXCALIDRAW_BASE_PATH ??
+      envVars.VITE_MOSAIC_EDITOR_BASE ??
+      "/",
     server: {
       port: Number(envVars.VITE_APP_PORT || 3000),
       // open the browser
       open: true,
+      /**
+       * No dashboard proxy here, and that is deliberate.
+       *
+       * Both apps must share an origin: the dashboard embeds this editor in an
+       * iframe and both read the same IndexedDB database (`mosaic-dashboard`),
+       * which is partitioned per origin. Two ports means two databases and every
+       * board opens blank.
+       *
+       * The dashboard's route table is written as `/dashboard`,
+       * `/dashboard/trash`, ..., `/board/:id` — it assumes it is mounted at the
+       * root of its own origin, which is what production does (nginx: `/` =
+       * dashboard, `/app/` = editor).
+       *
+       * Proxying `/dashboard` from here looks like the obvious fix and is not:
+       * the dashboard's HTML is emitted with root-relative asset URLs
+       * (`/assets/...`), so the browser would then request them from *this*
+       * origin, where the editor answers 404. Making it work would mean proxying
+       * the dashboard's entire dev module graph (`/@vite`, `/node_modules/.vite`,
+       * `/src/**`, `/@id/**`), which breaks silently on the first miss and on
+       * every Vite version bump.
+       *
+       * So in development the dashboard owns its own origin and is reached
+       * directly at http://localhost:3002/ — the same arrangement the e2e
+       * suite uses, and the one `verify:brand` and the Playwright specs are
+       * proven against. This editor is reached at http://localhost:3000/editor/
+       * (and at `/` thanks to the redirect plugin above).
+       */
     },
     // We need to specify the envDir since now there are no
     //more located in parallel with the vite.config.ts file but in parent dir
@@ -162,6 +191,53 @@ export default defineConfig(({ mode }) => {
       assetsInlineLimit: 0,
     },
     plugins: [
+      /**
+       * Redirect `/` to `/editor/` when the editor is mounted under a base path.
+       *
+       * In local dev the editor is mounted at `/editor` so the dashboard's dev
+       * server can proxy `/editor` here and keep both apps on one origin — which
+       * they must be, because they share one IndexedDB and IndexedDB is
+       * partitioned per origin.
+       *
+       * Two details, both learned the hard way:
+       *
+       * 1. It must be a **redirect**, not a `req.url` rewrite. Rewriting makes
+       *    Vite emit a relative module URL (`index.tsx`), which the browser
+       *    resolves against `http://localhost:3000/` and requests as
+       *    `/index.tsx` — a 404, so the page renders only its static
+       *    `<h1>` and nothing else, with no error in any log.
+       *
+       * 2. It must be **unshifted onto the front of the stack**. A plain
+       *    `server.middlewares.use()` is appended, and Vite's own index.html
+       *    middleware runs first and answers `/` itself, so the redirect never
+       *    fires.
+       */
+      {
+        name: "mosaic-root-redirect",
+        configureServer(server) {
+          const redirect = (req: any, res: any, next: any) => {
+            if (req.url === "/" || req.url === "/index.html") {
+              res.statusCode = 302;
+              res.setHeader("Location", "/editor/");
+              res.end();
+              return;
+            }
+            next();
+          };
+          server.middlewares.use(redirect);
+          // `use()` appends; move it to the front so it beats Vite's own
+          // index.html handling. Capture the removed layer before re-inserting it
+          // — popping the stack after a splice would grab the wrong entry.
+          const stack = server.middlewares.stack as any[];
+          const index = stack.findIndex(
+            (layer: any) => layer.handle === redirect,
+          );
+          if (index > 0) {
+            const [layer] = stack.splice(index, 1);
+            stack.unshift(layer);
+          }
+        },
+      },
       Sitemap({
         hostname: "https://excalidraw.com",
         outDir: "build",

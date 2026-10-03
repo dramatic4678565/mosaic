@@ -133,8 +133,36 @@ Ports: editor dev server defaults to `VITE_APP_PORT` from `.env.development` (**
 ### Windows-only traps in this repo
 
 - `path.normalize("/editor/")` returns `\editor\` on Windows. Never normalize a URL pathname — it silently breaks every `startsWith` check. This cost hours in `mosaic-dashboard/e2e/preview-server.mjs`.
-- `FOO=bar cmd` in an npm script is POSIX-only and silently does the wrong thing in cmd.exe. Use a Node wrapper (`scripts/build-e2e.mjs`) or a Vite `--mode` env file (`.env.e2e`).
+- **Never use inline `FOO=bar cmd` in an npm script.** It is POSIX-only and silently does the wrong thing in cmd.exe. Put dev-time values in `.env.<mode>` files and read them with Vite's `loadEnv` — that is how the dev ports and mount paths are now configured. (A Node wrapper, `scripts/run-bash.mjs` / `scripts/build-e2e.mjs`, is the equivalent for shell scripts.)
 - `@` inside a PowerShell string adjacent to a variable is parsed as a splat / hashtable key. Use `'... {0}@{1}' -f $a, $b` instead of `"... $a@$b"`.
+
+### Local dev layout (one command)
+
+`yarn start` runs both apps via `concurrently`; Ctrl+C stops both.
+
+| URL                               | App                       |
+| --------------------------------- | ------------------------- |
+| `http://localhost:3000/`          | editor (302 → `/editor/`) |
+| `http://localhost:3000/editor/`   | editor                    |
+| `http://localhost:3002/`          | dashboard                 |
+| `http://localhost:3002/dashboard` | dashboard                 |
+
+**The dashboard owns its origin and proxies `/editor` back to the editor on it.** It must be same-origin with the editor or board mode breaks (IndexedDB is partitioned per origin). The editor must _not_ proxy `/dashboard`: the dashboard's route table (`/dashboard`, `/dashboard/trash`, … `/board/:id`) assumes it is mounted at the root of its origin, and its asset URLs are root-absolute, so serving it under a prefix on another port 404s every chunk. Full reasoning is in the comment above `server:` in `excalidraw-app/vite.config.mts`.
+
+Two traps that cost real time here:
+
+- The router basename is **`MOSAIC_DASHBOARD_BASENAME`, default `""`** and is deliberately _not_ derived from Vite's `base`. Deriving it turns `/dashboard/trash` into `/dashboard/dashboard/trash` whenever the app is served from a sub-path. Production sets `base=/`, which reduced to `""` anyway, so production behaviour is unchanged.
+- The dev-server root redirect must be a **real 302**, not a `req.url` rewrite. A rewrite makes Vite emit a relative `index.tsx`, which the browser resolves against `/` as `/index.tsx` → 404, so the editor renders only its static `<h1>` and nothing else, with no error in any log. It also has to be `unshift`ed onto the middleware stack — `use()` appends, and Vite's own index.html handler answers `/` first.
+
+Verify the dev wiring with `yarn test:e2e:dev` (needs `yarn start` running). It is deliberately separate from `yarn e2e`, which builds and serves its own bundles and therefore cannot see dev-server behaviour at all.
+
+### Upstream menu items are hidden, not deleted
+
+`FEATURE_FLAGS` in `packages/mosaic-brand` gates the five inherited items (Excalidraw+, GitHub, Follow us, Discord, Sign up) in `excalidraw-app/components/AppMainMenu.tsx`. All default `false`.
+
+**Do not "clean up" the wrapped JSX.** It is upstream code that still ships, and the flags exist so it can be restored with a one-line change instead of being hand-reconstructed from upstream. `yarn --cwd mosaic-dashboard test:e2e:dev` covers the menu; it runs in both the dev and built-output suites.
+
+Three upstream links remain elsewhere in the editor — the welcome-screen guest CTA, the guest banner, and the encryption blog link in `labels.link`. They are pinned explicitly in `e2e/menu-hide.spec.ts` rather than ignored, so a new leak fails the suite. Removing those three is an open decision.
 
 ### PowerShell syntax check without running anything
 
