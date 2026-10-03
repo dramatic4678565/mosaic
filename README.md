@@ -45,13 +45,29 @@ Requires Node 20+ and Yarn 1.22.
 
 ```bash
 yarn install
-
-# two terminals — they must be same-origin, which the dev proxy handles
-yarn start          # editor  -> http://localhost:3001
-yarn --cwd mosaic-dashboard dev   # dashboard -> http://localhost:3001
+yarn start
 ```
 
-Both apps are served through one dev proxy so they share a single IndexedDB. **Do not open them on different origins** — the dashboard embeds the editor and reads board scenes straight out of the browser's database, so a cross-origin editor silently opens an empty board.
+That single command runs **both** apps via [`concurrently`](https://www.npmjs.com/package/concurrently); Ctrl+C stops both.
+
+| URL                               | What                             |
+| --------------------------------- | -------------------------------- |
+| <http://localhost:3000/>          | editor (redirects to `/editor/`) |
+| <http://localhost:3000/editor/>   | editor, its real dev mount       |
+| <http://localhost:3002/>          | dashboard                        |
+| <http://localhost:3002/dashboard> | dashboard                        |
+
+Run them separately if you prefer: `yarn start:editor` and `yarn start:dashboard`.
+
+**Why the dashboard is not also on :3000.** The two apps share one IndexedDB, and IndexedDB is partitioned per origin, so the editor iframe must be same-origin with the dashboard or every board opens blank. The dashboard therefore owns its origin (:3002) and proxies `/editor` back to the editor on it. Serving the dashboard from the editor's port instead would serve its HTML at `/dashboard` while its asset URLs stayed root-relative (`/assets/…`), which the editor answers with 404 — so it would need the dashboard's entire dev module graph proxied too. Ports and mount paths live in [`.env.development`](.env.development).
+
+To check the dev wiring in a browser:
+
+```bash
+yarn --cwd mosaic-dashboard test:e2e:dev
+```
+
+That suite drives the running dev servers; `yarn e2e` is the separate built-output suite.
 
 ### Docker
 
@@ -69,7 +85,8 @@ yarn test:code        # eslint, --max-warnings=0
 yarn test:other       # prettier
 yarn test:app --watch=false   # editor unit tests (~2400)
 yarn test:dashboard   # dashboard unit tests (52)
-yarn e2e              # Playwright: builds both apps, then 25 specs
+yarn e2e              # Playwright: builds both apps, then 24 specs
+yarn test:e2e:dev     # Playwright against running dev servers (needs `yarn start`)
 yarn verify:brand     # rebrand guard — did an internal identifier get renamed?
 ```
 
