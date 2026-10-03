@@ -28,6 +28,12 @@ interface ImportMetaEnv {
   readonly VITE_EDITOR_BASE?: string;
   readonly VITE_APP_PORT?: string;
   readonly BASE_URL?: string;
+  /**
+   * Router basename. Deliberately independent of `BASE_URL`; defaults to "".
+   * Only set it if the app is mounted under a prefix that is *not* already part
+   * of the route table. See the note above `BASENAME` in `src/App.tsx`.
+   */
+  readonly MOSAIC_DASHBOARD_BASENAME?: string;
 }
 
 interface ImportMeta {

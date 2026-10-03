@@ -16,8 +16,23 @@ import { AppShell } from "@/components/shell/AppShell";
  * serves the editor, so React Router needs a basename. In dev Vite serves it from
  * `/`, hence the env-driven default. Keeping this in one place avoids the
  * classic bug where links work in dev and 404 in prod.
+ *
+ * The router basename is a *separate* concern from the asset base, and it
+ * defaults to "" on purpose.
+ *
+ * `base` controls where Vite emits asset URLs. `basename` controls how
+ * react-router interprets the path it sees. They only need to differ when the
+ * app is mounted on a sub-path that is *not* itself part of the route table —
+ * which is exactly the local-dev setup: the editor's dev server proxies
+ * `/dashboard` here, the app is served from `/dashboard/` so its asset URLs
+ * resolve, but the routes are still `/dashboard`, `/dashboard/trash`, …
+ *
+ * Deriving the basename from `base` double-counts the prefix in that case and
+ * turns `/dashboard/trash` into `/dashboard/dashboard/trash`. Production sets
+ * `base=/`, which reduced to an empty basename anyway, so defaulting to "" is
+ * identical to the previous behaviour there.
  */
-const BASENAME = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
+const BASENAME = import.meta.env.MOSAIC_DASHBOARD_BASENAME ?? "";
 
 export const App = () => {
   const loadState = useDashboardStore((s) => s.loadState);
