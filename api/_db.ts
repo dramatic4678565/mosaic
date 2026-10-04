@@ -89,17 +89,51 @@ const unpack = (value: string | undefined): string | null => {
 };
 
 /**
- * Minimal cookie header parser.
+ * Minimal structural subsets of Vercel's Node request and response.
  *
- * Deliberately not a dependency: the Vercel `Request` exposes headers but not a
- * parsed cookie jar, and one `split(";")` is all that is needed.
+ * Declared structurally rather than importing `@vercel/node` so the functions
+ * compile with no extra dependency, and so it is obvious exactly how much of
+ * those objects we actually rely on.
+ *
+ * This signature � not the Web `Request`/`Response` pair � is what Vercel's
+ * **Node.js** runtime invokes. The Web style belongs to the Edge runtime, and a
+ * `Response` returned from a default export here is silently ignored by Vercel:
+ * the request then hangs and every log line says
+ * "default export returned a `Response`".
  */
-const readCookie = (req: Request, name: string): string | undefined => {
-  const header = req.headers.get("cookie");
-  if (!header) {
+export type ApiRequest = {
+  method?: string;
+  /** Path plus query string, e.g. `/api/boards?trashed=1`. */
+  url?: string;
+  /** Node lowercases header names, so the cookie arrives as `headers.cookie`. */
+  headers: Record<string, string | string[] | undefined>;
+  /**
+   * Parsed by Vercel when the request is `application/json`. Deliberately
+   * `unknown`: the handlers narrow it, because a client can send anything.
+   */
+  body?: unknown;
+};
+
+export type ApiResponse = {
+  status(code: number): ApiResponse;
+  setHeader(name: string, value: string): void;
+  json(body: unknown): void;
+  end(): void;
+};
+
+/**
+ * Reads one cookie out of the `cookie` request header.
+ *
+ * A Node request carries `headers.cookie` as a plain string rather than a
+ * `Headers` object, so one `split(";")` is all that is needed.
+ */
+const readCookie = (req: ApiRequest, name: string): string | undefined => {
+  const header = req.headers.cookie;
+  const raw = Array.isArray(header) ? header.join("; ") : header;
+  if (!raw) {
     return undefined;
   }
-  for (const part of header.split(";")) {
+  for (const part of raw.split(";")) {
     const eq = part.indexOf("=");
     if (eq === -1) {
       continue;
@@ -114,16 +148,14 @@ const readCookie = (req: Request, name: string): string | undefined => {
 /**
  * Resolves the caller's owner uid, minting and setting a cookie if absent.
  *
- * Takes a plain `Headers` rather than a `Response` because a `Response` body is
- * immutable once constructed: the handler cannot know its status or body until
- * the work is done, but the cookie has to be decided first. So handlers create a
- * `Headers`, pass it here, and hand it to `json(...)` when building the real
- * response.
+ * The cookie is written with `setHeader` before the handler knows its status or
+ * body, which is what makes this workable with the Node signature: unlike a Web
+ * `Response`, `res` stays mutable for the whole request.
  *
- * The returned uid works for reads and writes whether it already existed or was
- * just minted, so callers never need to distinguish the two cases.
+ * The returned uid is valid for reads and writes whether it already existed or
+ * was just minted, so callers never need to distinguish the two cases.
  */
-export const getOwnerUid = (req: Request, headers: Headers): string => {
+export const getOwnerUid = (req: ApiRequest, res: ApiResponse): string => {
   const existing = unpack(readCookie(req, UID_COOKIE));
   if (existing) {
     return existing;
@@ -131,7 +163,7 @@ export const getOwnerUid = (req: Request, headers: Headers): string => {
 
   const uid = randomUUID();
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-  headers.append(
+  res.setHeader(
     "Set-Cookie",
     // SameSite=Lax: the API is same-origin, and Lax means a cross-site POST will
     // not carry this cookie even if someone manages a cross-origin form.
@@ -237,14 +269,48 @@ export const rateLimitOk = (uid: string): boolean => {
  * cookie lands on a placeholder response and its headers are copied onto the real
  * one here.
  */
-export const json = (
-  body: unknown,
-  status = 200,
-  extra?: HeadersInit,
-): Response => {
-  const headers = new Headers(extra);
-  headers.set("content-type", "application/json; charset=utf-8");
-  return new Response(JSON.stringify(body), { status, headers });
+export const json = (res: ApiResponse, body: unknown, status = 200): void => {
+  res.status(status).json(body);
+};
+
+/**
+ * Parses a JSON request body.
+ *
+ * Vercel pre-parses `application/json` into `req.body`, but a body can still
+ * arrive as a string when the content type is wrong or absent, so both shapes are
+ * accepted. Anything else — or malformed JSON — yields `null` and the caller
+ * answers 400 rather than crashing.
+ */
+export const readJson = (req: ApiRequest): Record<string, unknown> | null => {
+  const body = req.body;
+  if (body === undefined || body === null) {
+    return null;
+  }
+  if (typeof body === "string") {
+    try {
+      const parsed = JSON.parse(body) as unknown;
+      return parsed && typeof parsed === "object"
+        ? (parsed as Record<string, unknown>)
+        : null;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof body === "object" && !Array.isArray(body)) {
+    return body as Record<string, unknown>;
+  }
+  return null;
+};
+
+/**
+ * Query parameters, parsed from `req.url`.
+ *
+ * Vercel also exposes a `req.query` object, but it is string-typed and collapses
+ * repeated parameters; parsing the URL is both simpler and unambiguous.
+ */
+export const searchParams = (req: ApiRequest): URLSearchParams => {
+  // `req.url` is a path, not absolute, so a base has to be supplied.
+  return new URL(req.url ?? "/", "http://localhost").searchParams;
 };
 
 /* -------------------------------------------------------------------------- */
