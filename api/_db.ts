@@ -276,13 +276,25 @@ export const json = (res: ApiResponse, body: unknown, status = 200): void => {
 /**
  * Parses a JSON request body.
  *
- * Vercel pre-parses `application/json` into `req.body`, but a body can still
- * arrive as a string when the content type is wrong or absent, so both shapes are
- * accepted. Anything else — or malformed JSON — yields `null` and the caller
- * answers 400 rather than crashing.
+ * Two things can go wrong here and both must become a 400 rather than a 500:
+ *
+ * - Accessing `req.body` on Vercel's Node runtime is a lazy parse that **throws**
+ *   ("Invalid JSON") when the payload does not match the declared content type.
+ *   Reading the property can therefore fail, so the access is guarded.
+ * - Vercel pre-parses `application/json`, but a body can still arrive as a string
+ *   when the content type is wrong or absent, so both shapes are accepted.
+ *
+ * Anything unusable yields `null` and the caller answers 400.
  */
 export const readJson = (req: ApiRequest): Record<string, unknown> | null => {
-  const body = req.body;
+  let body: unknown;
+  try {
+    body = req.body;
+  } catch {
+    // The lazy body parser rejected the payload. Nothing to salvage.
+    return null;
+  }
+
   if (body === undefined || body === null) {
     return null;
   }
