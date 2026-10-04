@@ -1,0 +1,6 @@
+{
+  "name": "mosaic-api",
+  "private": true,
+  "type": "module",
+  "description": "Marks the serverless functions in this directory as ES modules."
+}
