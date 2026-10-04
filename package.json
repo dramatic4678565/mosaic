@@ -68,8 +68,8 @@
     "build:packages": "yarn build:common && yarn build:fractional-indexing && yarn build:laser-pointer && yarn build:math && yarn build:element && yarn build:excalidraw",
     "build:version": "yarn --cwd ./excalidraw-app build:version",
     "build": "yarn --cwd ./excalidraw-app build",
-    "build:dashboard": "yarn --cwd ./mosaic-dashboard build",
-    "build:all": "yarn build && yarn build:dashboard",
+    "build:dashboard": "yarn --cwd mosaic-dashboard build",
+    "build:all": "yarn build:dashboard && yarn build:editor && yarn build:vercel-assets",
     "test:dashboard": "yarn --cwd ./mosaic-dashboard test",
     "test:e2e": "yarn --cwd ./mosaic-dashboard test:e2e",
     "build:preview": "yarn --cwd ./excalidraw-app build:preview",
@@ -105,9 +105,15 @@
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",
     "clean-install": "yarn rm:node_modules && yarn install",
-    "test:e2e:collab": "yarn --cwd ./mosaic-dashboard test:e2e:collab"
+    "test:e2e:collab": "yarn --cwd ./mosaic-dashboard test:e2e:collab",
+    "build:editor": "yarn --cwd excalidraw-app build",
+    "build:vercel-assets": "node scripts/copy-editor-to-dist.mjs",
+    "db:migrate": "node db/migrate.mjs"
   },
   "resolutions": {
     "strip-ansi": "6.0.1"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "1.2.0"
   }
 }

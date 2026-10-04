@@ -44,3 +44,9 @@ test-results
 .screenshot-profile
 mosaic-dashboard/test-results-dev
 mosaic-dashboard/test-results-collab
+
+# Neon agent skills + MCP config (installed by the Neon CLI).
+.agents/
+opencode.json
+skills-lock.json
+.vercel

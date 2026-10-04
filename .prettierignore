@@ -6,3 +6,9 @@ mosaic-dashboard/test-results-dev
 # The excalidraw-room submodule: upstream's code, formatted and linted upstream.
 # Formatting it here would leave the submodule permanently dirty.
 infra/excalidraw-room/mosaic-dashboard/test-results-collab
+
+# Neon agent skills + MCP config installed by 'neon mcp' / 'neon skills'.
+# Third-party tooling artifacts, not project source.
+.agents/
+opencode.json
+skills-lock.json

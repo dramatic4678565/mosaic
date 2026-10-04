@@ -20,3 +20,12 @@ mosaic-dashboard/test-results-dev
 infra/excalidraw-room/
 
 mosaic-dashboard/test-results-collab
+
+.agents/
+opencode.json
+skills-lock.json
+
+# Vercel's local project link and its build cache. Gitignored already, but prettier
+# reads this file (not .gitignore) via --ignore-path, so without it every local
+# `vercel dev` / `vercel build` leaves JSON behind that fails `yarn test:other`.
+.vercel/
