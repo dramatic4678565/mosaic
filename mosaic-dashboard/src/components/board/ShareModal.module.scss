@@ -1,0 +1,43 @@
+.share {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.input {
+  font: inherit;
+  /* The token is 64 hex characters, so the field has to be wide enough to show it
+     without truncation — a half-visible URL cannot be copied by hand. */
+  font-size: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border, #cfd5dc);
+  border-radius: 8px;
+  background: var(--color-surface-muted, #f7f8fa);
+  color: inherit;
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.danger {
+  align-self: flex-start;
+  margin-top: 4px;
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 1px solid rgb(180 35 24 / 35%);
+  border-radius: 8px;
+  background: none;
+  color: #b42318;
+  cursor: pointer;
+}
+
+.danger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

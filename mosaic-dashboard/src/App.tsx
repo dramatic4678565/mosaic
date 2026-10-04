@@ -7,6 +7,7 @@ import { BoardPage } from "@/pages/BoardPage";
 import { BoardsPage } from "@/pages/BoardsPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { SharedBoardPage } from "@/pages/SharedBoardPage";
 import { useAuthStore } from "@/state/useAuthStore";
 import { useDashboardStore } from "@/state/useDashboardStore";
 import { AppShell } from "@/components/shell/AppShell";
@@ -79,6 +80,15 @@ export const App = () => {
 
   return (
     <BrowserRouter basename={BASENAME}>
+      {/*
+          A shared board is rendered outside AppShell on purpose: the sidebar, the
+          account block and the board grid all assume an owner with an editable store,
+          and a read-only viewer should see none of them.
+        */}
+      <Routes>
+        <Route path="/share/:token" element={<SharedBoardPage />} />
+      </Routes>
+
       <AppShell>
         <Routes>
           {/* STEP 2 route table */}

@@ -101,9 +101,18 @@ const handlePatch = async (
   const sets: string[] = [];
   const params: unknown[] = [];
 
-  const push = (column: string, value: unknown) => {
+  /**
+   * Appends one `column = $n` assignment.
+   *
+   * `cast` exists because the Neon driver sends parameters as text and Postgres will
+   * not implicitly coerce a text parameter into `timestamptz`:
+   * `column "trashed_at" is of type timestamp with time zone but expression is of
+   * type text`. Relying on the driver's type inference is what made trash fail, so
+   * anything non-text says so in the SQL.
+   */
+  const push = (column: string, value: unknown, cast?: string) => {
     params.push(value);
-    sets.push(`${column} = $${params.length}`);
+    sets.push(`${column} = $${params.length}${cast ? `::${cast}` : ""}`);
   };
 
   if (typeof body.name === "string") {
@@ -143,7 +152,7 @@ const handlePatch = async (
       json(res, { error: "trashedAt must be a timestamp or null" }, 400);
       return;
     }
-    push("trashed_at", toIso(trashedAt as number | null));
+    push("trashed_at", toIso(trashedAt as number | null), "timestamptz");
   }
   if (typeof body.thumbnail === "string") {
     push("thumbnail", body.thumbnail);
@@ -164,11 +173,19 @@ const handlePatch = async (
   // "recent" ordering and the card timestamp render.
   sets.push("updated_at = now()");
 
-  // Scope goes on last so the placeholder numbers line up with `params`. The
-  // owner column is `user_id` or `owner_uid` depending on the actor, so the
-  // fragment is generated rather than hard-coded.
-  const scope = ownerScope(actor);
-  params.push(...scope.params, id);
+  /**
+   * The ownership scope gets its own placeholder, after every SET parameter.
+   *
+   * This looks like a detail and is not. `sets` starts numbering at `$1`, so a
+   * default `ownerScope()` would reuse `$1` for the owner column and collide with
+   * whatever the first assignment was. Postgres infers one type per parameter, so
+   * the collision is invisible for text-to-text updates (a rename, a scene save) and
+   * only surfaces on the first non-text one — trashing — as
+   * `column "trashed_at" is of type timestamp with time zone but expression is of
+   * type text`. Renaming worked and trashing did not, from the same statement.
+   */
+  params.push(actor.userId ?? actor.ownerUid, id);
+  const scope = ownerScope(actor, "b", params.length - 1);
   const updated = await query<BoardRow>(
     `UPDATE boards b SET ${sets.join(", ")}
      WHERE b.id = $${params.length} AND ${scope.sql}

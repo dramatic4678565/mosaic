@@ -63,13 +63,27 @@ export const resolveActor = async (
  * before the claim would keep granting read access to rows that now belong to an
  * account. The same predicate is what makes the claim idempotent, so the invariant
  * is stated once and used everywhere.
+ *
+ * `startAt` places the placeholder at `$2`, `$3`, … for queries that already spend
+ * `$1` on something of a different type. Postgres infers one type per parameter, so
+ * writing `b.id = $1 AND b.owner_uid = $1` is a runtime error (`operator does not
+ * exist: text = uuid`), not a stylistic complaint — and it is invisible until the
+ * query meets a real database.
  */
-export const ownerScope = (actor: Actor, column: "b" | "f" = "b") => ({
-  sql: actor.userId
-    ? `${column}.user_id = $1`
-    : `${column}.owner_uid = $1 AND ${column}.user_id IS NULL`,
-  params: [actor.userId ?? actor.ownerUid] as unknown[],
-});
+export const ownerScope = (
+  actor: Actor,
+  column: "b" | "f" = "b",
+  startAt = 1,
+): { sql: string; params: unknown[]; placeholder: string } => {
+  const placeholder = `$${startAt}`;
+  return {
+    sql: actor.userId
+      ? `${column}.user_id = ${placeholder}`
+      : `${column}.owner_uid = ${placeholder} AND ${column}.user_id IS NULL`,
+    params: [actor.userId ?? actor.ownerUid],
+    placeholder,
+  };
+};
 
 /** Column an insert must set so the row is reachable by its creator. */
 export const ownerColumn = (actor: Actor): { column: string; value: string } =>
