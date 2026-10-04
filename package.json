@@ -104,7 +104,8 @@
     "e2e": "yarn build:e2e && yarn --cwd ./mosaic-dashboard test:e2e",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",
-    "clean-install": "yarn rm:node_modules && yarn install"
+    "clean-install": "yarn rm:node_modules && yarn install",
+    "test:e2e:collab": "yarn --cwd ./mosaic-dashboard test:e2e:collab"
   },
   "resolutions": {
     "strip-ansi": "6.0.1"

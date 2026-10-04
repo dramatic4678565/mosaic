@@ -1,3 +1,8 @@
 mosaic-dashboard/test-results
 mosaic-dashboard/playwright-report
 mosaic-dashboard/blob-report
+mosaic-dashboard/test-results-dev
+
+# The excalidraw-room submodule: upstream's code, formatted and linted upstream.
+# Formatting it here would leave the submodule permanently dirty.
+infra/excalidraw-room/mosaic-dashboard/test-results-collab
