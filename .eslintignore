@@ -21,11 +21,13 @@ infra/excalidraw-room/
 
 mosaic-dashboard/test-results-collab
 
+# Neon agent skills + MCP config installed by 'neon mcp' / 'neon skills'.
+# Third-party tooling artifacts, not project source.
 .agents/
 opencode.json
 skills-lock.json
 
-# Vercel's local project link and its build cache. Gitignored already, but prettier
+# Vercel's local project link and build cache. Gitignored already, but prettier
 # reads this file (not .gitignore) via --ignore-path, so without it every local
-# `vercel dev` / `vercel build` leaves JSON behind that fails `yarn test:other`.
+# 'vercel dev' / 'vercel build' leaves JSON behind that fails 'yarn test:other'.
 .vercel/
