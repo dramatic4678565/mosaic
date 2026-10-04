@@ -5,13 +5,13 @@ import { beforeEach } from "vitest";
 // anywhere in the test graph.
 import "fake-indexeddb/auto";
 
-import { resetDatabase } from "@/db/index";
+import { resetDatabase } from "@/lib/storage";
 
 /**
  * Global test bootstrap for the dashboard's unit tests.
  *
  * Isolation strategy: instead of recreating the Dexie instance (which would mean
- * swapping the singleton that `db/operations.ts` holds), we simply clear every
+ * swapping the singleton that `lib/storage/indexeddb.ts` holds), we simply clear every
  * table before each test. Dexie performs fast reads from an in-memory cache, so
  * this is cheap and gives the same guarantee — no rows leak between cases.
  */

@@ -5,7 +5,7 @@ import { BRAND } from "@mosaic/brand";
 
 import type { Board } from "@/db/schema";
 
-import { getBoardWithScene, markBoardOpened } from "@/db/operations";
+import { storage } from "@/lib/storage";
 
 import { t } from "@/lib/i18n";
 import { useDashboardStore } from "@/state/useDashboardStore";
@@ -45,7 +45,7 @@ export const BoardPage = () => {
     }
     let cancelled = false;
     void (async () => {
-      const found = await getBoardWithScene(id);
+      const found = await storage.getBoardWithScene(id);
       if (cancelled) {
         return;
       }
@@ -54,7 +54,7 @@ export const BoardPage = () => {
         return;
       }
       setBoard(found);
-      await markBoardOpened(id);
+      await storage.markBoardOpened(id);
       await reload();
     })();
     return () => {

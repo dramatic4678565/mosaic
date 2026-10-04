@@ -7,7 +7,10 @@ import styles from "./BoardGrid.module.scss";
 
 import type { Board } from "@/db/schema";
 
-import { getBoardStatsMap, type BoardStats } from "@/db/operations";
+import type { BoardStats } from "@/lib/storage/types";
+
+import { storage } from "@/lib/storage";
+
 import { nextSelection } from "@/lib/selection";
 import {
   FOLDER_DROPPABLE_PREFIX,
@@ -55,7 +58,7 @@ export const BoardGrid = ({
 
   useEffect(() => {
     let cancelled = false;
-    void getBoardStatsMap().then((map) => {
+    void storage.getBoardStatsMap().then((map) => {
       if (!cancelled) {
         setStats(map);
       }
