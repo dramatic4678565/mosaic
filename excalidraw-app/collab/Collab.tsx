@@ -61,6 +61,7 @@ import {
   LOAD_IMAGES_TIMEOUT,
   WS_SUBTYPES,
   SYNC_FULL_SCENE_INTERVAL_MS,
+  WS_RECONNECTION,
   WS_EVENTS,
 } from "../app_constants";
 import {
@@ -110,6 +111,38 @@ interface CollabState {
 
 export const activeRoomLinkAtom = atom<string | null>(null);
 export const userToFollowAtom = atom<UserToFollow | null>(null);
+
+/**
+ * Where the collaboration WebSocket server lives.
+ *
+ * Read from the environment so one value can be changed per deployment. If it
+ * is missing we fall back to Mosaic's own self-hosted instance rather than
+ * letting collaboration fail silently or, worse, quietly reverting to
+ * *upstream's* public server — which is rate-limited and is what made remote
+ * edits take tens of seconds to arrive.
+ *
+ * `https://` rather than `wss://` on purpose: socket.io accepts an http(s)
+ * origin and negotiates the WebSocket upgrade itself, so this keeps working
+ * behind a TLS-terminating proxy.
+ *
+ * Warned rather than thrown: a missing variable should be loud in the console
+ * without breaking the editor for someone who never touches collaboration.
+ */
+export const DEFAULT_COLLAB_SERVER_URL =
+  "https://excalidraw-room-5yet.onrender.com";
+
+export const getCollabServerUrl = (): string => {
+  const fromEnv = import.meta.env.VITE_APP_WS_SERVER_URL;
+  if (fromEnv) {
+    return fromEnv;
+  }
+  console.warn(
+    "[collab] VITE_APP_WS_SERVER_URL is not set; falling back to Mosaic's " +
+      "self-hosted room server. Set it explicitly per environment rather than " +
+      "relying on this default.",
+  );
+  return DEFAULT_COLLAB_SERVER_URL;
+};
 
 type CollabInstance = InstanceType<typeof Collab>;
 
@@ -531,8 +564,17 @@ class Collab extends PureComponent<CollabProps, CollabState> {
 
     try {
       this.portal.socket = this.portal.open(
-        socketIOClient(import.meta.env.VITE_APP_WS_SERVER_URL, {
+        socketIOClient(getCollabServerUrl(), {
+          // websocket first; polling is the fallback for restrictive proxies.
           transports: ["websocket", "polling"],
+          // Explicit so a dropped link comes back in seconds rather than
+          // drifting out to socket.io's 5s default backoff ceiling.
+          reconnection: WS_RECONNECTION.reconnection,
+          reconnectionAttempts: WS_RECONNECTION.reconnectionAttempts,
+          reconnectionDelay: WS_RECONNECTION.reconnectionDelay,
+          reconnectionDelayMax: WS_RECONNECTION.reconnectionDelayMax,
+          randomizationFactor: WS_RECONNECTION.randomizationFactor,
+          timeout: WS_RECONNECTION.timeout,
         }),
         roomId,
         roomKey,
