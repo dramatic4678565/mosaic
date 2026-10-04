@@ -232,10 +232,34 @@ const handleDelete = async (
   json(res, { ok: true });
 };
 
+/**
+ * Extracts the board id from the request.
+ *
+ * Prefers the framework-provided `ctx.params.id`, but does not depend on it:
+ * Vercel's Node runtime has been observed invoking this handler with the context
+ * argument `undefined`, so `ctx.params.id` is a crash ("Cannot read properties of
+ * undefined"), not a feature. `ctx?.params?.id` guards that, and the id is then
+ * taken from the last path segment of `/api/boards/<id>`.
+ *
+ * Deriving it from the URL is safe here because this file only ever serves one
+ * route shape — there is no wildcard to disambiguate against.
+ */
+const boardIdFromRequest = (
+  req: ApiRequest,
+  ctx?: { params?: { id?: string } },
+): string => {
+  const fromContext = ctx?.params?.id;
+  if (fromContext) {
+    return fromContext;
+  }
+  const path = (req.url ?? "").split("?")[0].replace(/\/+$/, "");
+  return path.split("/").filter(Boolean).pop() ?? "";
+};
+
 export default async function handler(
   req: ApiRequest,
   res: ApiResponse,
-  ctx: { params?: { id?: string } },
+  ctx?: { params?: { id?: string } },
 ): Promise<void> {
   try {
     const uid = getOwnerUid(req, res);
@@ -246,7 +270,7 @@ export default async function handler(
     }
 
     const method = req.method ?? "GET";
-    const id = ctx.params?.id ?? "";
+    const id = boardIdFromRequest(req, ctx);
 
     // Reject a malformed id before it reaches Postgres. An invalid uuid would
     // otherwise raise a 22P02 driver error and surface as a 500, when the client
