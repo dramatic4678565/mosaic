@@ -1,10 +1,17 @@
 # Local development with Docker.
 #
-#   docker compose up --build   -> http://localhost:8080
+#   docker compose up --build          -> http://localhost:8080
+#   docker compose up collab           -> ws://localhost:8081  (collaboration only)
+#   docker compose --profile collab up -> both, for the two-tab latency test
 #
-# Serves both apps from one origin, which is required: the dashboard embeds the
-# editor and both read the same IndexedDB, and IndexedDB is partitioned per
-# origin.
+# `mosaic` serves both apps from one origin, which is required: the dashboard
+# embeds the editor and both read the same IndexedDB, and IndexedDB is
+# partitioned per origin.
+#
+# `collab` is the excalidraw-room WebSocket server, built from the
+# `infra/excalidraw-room` submodule. It is a separate profile so that the common
+# case (`docker compose up` to look at the app) does not pay for a second build,
+# while `--profile collab` gives you the full real-time stack.
 
 services:
   mosaic:
@@ -25,3 +32,31 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  collab:
+    # Behind a profile: opt in with `docker compose --profile collab up` or by
+    # naming the service (`docker compose up collab`).
+    profiles:
+      - collab
+    build:
+      # Context is the repo root so `infra/excalidraw-room/` can be COPYed in
+      # without writing anything inside the submodule. See infra/collab.Dockerfile.
+      context: .
+      dockerfile: infra/collab.Dockerfile
+    container_name: mosaic-collab
+    environment:
+      NODE_ENV: production
+      # The room server logs "listening on port: 80" on boot.
+      PORT: "80"
+      # Restrict in production; "*" is convenient for local work across ports.
+      CORS_ORIGIN: ${COLLAB_CORS_ORIGIN:-*}
+    ports:
+      # Host 8081 -> container 80, matching VITE_APP_WS_SERVER_URL in .env.development.
+      - "8081:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

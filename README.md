@@ -87,6 +87,7 @@ yarn test:app --watch=false   # editor unit tests (~2400)
 yarn test:dashboard   # dashboard unit tests (52)
 yarn e2e              # Playwright: builds both apps, then 24 specs
 yarn test:e2e:dev     # Playwright against running dev servers (needs `yarn start`)
+yarn test:e2e:collab  # collaboration latency, measured against the live room server
 yarn verify:brand     # rebrand guard — did an internal identifier get renamed?
 ```
 
@@ -112,6 +113,20 @@ Both must be **one origin**. Three settings have to agree, and each app and the 
 Get one wrong and the editor 404s a hashed chunk and renders a blank canvas with no error. `scripts/build-e2e.mjs` sets them together for the e2e build.
 
 Requires a secure context (HTTPS, or `localhost`) — IndexedDB, service workers and the editor's workers all need one.
+
+---
+
+## Live collaboration
+
+Real-time sync runs on a self-hosted [excalidraw-room](https://github.com/excalidraw/excalidraw-room) server at **<https://excalidraw-room-5yet.onrender.com>** (Render free tier), pointed at by `VITE_APP_WS_SERVER_URL`.
+
+Run one locally (optional, behind a compose profile):
+
+```bash
+docker compose --profile collab up --build collab   # -> localhost:8081
+```
+
+Two separate things used to make a remote edit take ~60 s, and both were fixed: the client pointed at upstream's rate-limited public collab server, **and** `SYNC_FULL_SCENE_INTERVAL_MS` throttled outbound scene updates to once per **20 s**. See [`docs/COLLAB.md`](docs/COLLAB.md) for hosting options and how to debug latency if it returns.
 
 ---
 

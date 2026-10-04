@@ -11,4 +11,12 @@ dev-dist
 coverage
 mosaic-dashboard/test-results
 mosaic-dashboard/playwright-report
-mosaic-dashboard/blob-reportmosaic-dashboard/test-results-dev
+mosaic-dashboard/blob-report
+mosaic-dashboard/test-results-dev
+
+# The excalidraw-room submodule. Its code is upstream's and is linted by upstream
+# in its own repository; linting it here both fails on pre-existing style and
+# would break `git submodule update`, since a fix would show the submodule dirty.
+infra/excalidraw-room/
+
+mosaic-dashboard/test-results-collab

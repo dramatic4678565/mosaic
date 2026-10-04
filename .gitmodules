@@ -1,0 +1,3 @@
+[submodule "infra/excalidraw-room"]
+	path = infra/excalidraw-room
+	url = https://github.com/excalidraw/excalidraw-room

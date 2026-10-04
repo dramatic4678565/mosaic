@@ -37,8 +37,12 @@ export default defineConfig({
    * `menu-hide.spec.ts` is deliberately NOT excluded. Hiding the upstream menu
    * items is a shipped behaviour, so it is verified against the built bundle
    * rather than only against a dev server.
+   * `collab-latency.spec.ts` is excluded for the same reason, plus it needs
+   * outbound network access to the deployed room server — a Render cold start
+   * must never be able to turn this hermetic suite red. It has its own config
+   * (`playwright.collab.config.ts`, `yarn test:e2e:collab`).
    */
-  testIgnore: /dev-smoke\.spec\.ts/,
+  testIgnore: /(dev-smoke|collab-latency)\.spec\.ts/,
   // Warms the served bundles. See the file for why.
   globalSetup: "./e2e/global-setup.ts",
   // Serial: every spec shares one IndexedDB origin and one server, so parallel

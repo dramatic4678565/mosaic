@@ -43,3 +43,4 @@ test-results
 # Chrome profile created by scripts/screenshots.js.
 .screenshot-profile
 mosaic-dashboard/test-results-dev
+mosaic-dashboard/test-results-collab
