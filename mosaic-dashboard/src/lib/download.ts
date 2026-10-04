@@ -1,6 +1,6 @@
 import type { Board } from "@/db/schema";
 
-import { getBoardWithScene } from "@/db/operations";
+import { storage } from "@/lib/storage";
 
 /**
  * Board export (STEP 3).
@@ -99,7 +99,7 @@ export const downloadBoard = async (
   const base = safeFilename(board.name);
 
   if (format === "mosaic") {
-    const full = await getBoardWithScene(board.id);
+    const full = await storage.getBoardWithScene(board.id);
     const blob = new Blob(
       [buildMosaicEnvelope(full ?? board, full?.scene ?? "")],
       {
@@ -111,7 +111,7 @@ export const downloadBoard = async (
   }
 
   if (format === "excalidraw") {
-    const full = await getBoardWithScene(board.id);
+    const full = await storage.getBoardWithScene(board.id);
     const blob = new Blob([toExcalidrawJson(full?.scene)], {
       // Unchanged upstream MIME type — this is a format identifier.
       type: "application/vnd.excalidraw+json",

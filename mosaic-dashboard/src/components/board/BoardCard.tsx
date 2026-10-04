@@ -9,7 +9,7 @@ import type { DownloadFormat } from "./BoardContextMenu";
 
 import type { Board } from "@/db/schema";
 
-import type { BoardStats } from "@/db/operations";
+import type { BoardStats } from "@/lib/storage/types";
 
 import { MosaicMark } from "@/components/common/MosaicMark";
 import { downloadBoard } from "@/lib/download";

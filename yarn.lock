@@ -2146,6 +2146,11 @@
   dependencies:
     langium "3.3.1"
 
+"@neondatabase/serverless@1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@neondatabase/serverless/-/serverless-1.2.0.tgz#d58553f0804eb9ddacb09662d607756b7dc74b77"
+  integrity sha512-tnaqgixUengZQNd9ZrS3ytQfamJzLKY8QxgqWQTNHHtB+KrFQWk77JTbbpg4RD+J3qE4eO2lVytvGDX5Kj6FdQ==
+
 "@next/env@14.1.4":
   version "14.1.4"
   resolved "https://registry.yarnpkg.com/@next/env/-/env-14.1.4.tgz#432e80651733fbd67230bf262aee28be65252674"

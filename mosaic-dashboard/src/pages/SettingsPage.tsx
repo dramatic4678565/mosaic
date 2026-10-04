@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { Modal } from "@/components/common/Modal";
-import { resetDatabase } from "@/db/index";
+import { resetDatabase } from "@/lib/storage";
 import { t } from "@/lib/i18n";
 import { pluralize } from "@/lib/selectors";
 import { useDashboardStore } from "@/state/useDashboardStore";

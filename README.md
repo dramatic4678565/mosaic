@@ -69,6 +69,27 @@ yarn --cwd mosaic-dashboard test:e2e:dev
 
 That suite drives the running dev servers; `yarn e2e` is the separate built-output suite.
 
+#### Storage: local by default
+
+Development stores boards in IndexedDB, not in the database. `VITE_API_URL` is absent from `.env.development` and `.env.e2e`, so [`src/lib/storage/index.ts`](mosaic-dashboard/src/lib/storage/index.ts) selects the local adapter and logs which one it picked:
+
+```
+[storage] backend: indexeddb
+```
+
+Both adapters implement one interface, so components import `{ storage }` and never know which is live. Nothing is left out of the local adapter, which is what lets the whole existing test suite stay offline and hermetic.
+
+To work against the real API instead, run `vercel dev` — see [`docs/DEPLOY.md`](docs/DEPLOY.md#3-local-development).
+
+#### Migrations
+
+The Postgres schema lives in [`db/migrations/`](db/migrations) and is applied with a ledger, so it is safe to re-run:
+
+```bash
+# .env.local needs the DIRECT Neon connection string (migrations, not pooled traffic)
+yarn db:migrate
+```
+
 ### Docker
 
 ```bash
@@ -89,18 +110,23 @@ yarn e2e              # Playwright: builds both apps, then 24 specs
 yarn test:e2e:dev     # Playwright against running dev servers (needs `yarn start`)
 yarn test:e2e:collab  # collaboration latency, measured against the live room server
 yarn verify:brand     # rebrand guard — did an internal identifier get renamed?
+yarn db:migrate       # apply db/migrations to Neon (needs DATABASE_URL)
 ```
 
 `yarn verify:brand` is the most important one after touching anything bulk. See [`REBRAND.md`](REBRAND.md).
+
+The dashboard's unit tests bind to the IndexedDB adapter explicitly rather than to `{ storage }`, so they can never reach a real database even if `VITE_API_URL` happens to be set in your environment.
 
 ---
 
 ## Deployment layout
 
 ```
-/        -> mosaic-dashboard     (the dashboard)
-/app/    -> excalidraw-app       (the editor)
+/         -> mosaic-dashboard     (the dashboard)
+/app/     -> excalidraw-app       (the editor)
 ```
+
+Deployed on **Vercel**, with boards stored in **Neon Postgres** and served by serverless functions under `/api`. See [`docs/DEPLOY.md`](docs/DEPLOY.md) for the full runbook.
 
 Both must be **one origin**. Three settings have to agree, and each app and the server needs its own:
 
@@ -152,14 +178,18 @@ Full policy: [`UPSTREAM_SYNC.md`](UPSTREAM_SYNC.md). Machine-readable version th
 excalidraw-app/     editor app + board mode (bridge to the dashboard)
 packages/           excalidraw/* packages + mosaic-brand
 mosaic-dashboard/   dashboard app (boards, folders, activity, trash)
+  src/lib/storage/  StorageAdapter interface + indexeddb/api backends
 docker/             nginx config
+api/                Vercel serverless functions (health, boards)
+db/                 Postgres schema + migrator
 scripts/
   brand/            rebrand tooling + verification
   sync-upstream.*   upstream merge (bash + PowerShell)
   build-e2e.mjs     cross-platform e2e build with matching base paths
+  copy-editor-to-dist.mjs  copies the editor build into the dashboard's dist
   screenshots.js    regenerates README images
 memory/             project notes — read MEMORY.md before changing anything
-docs/               README screenshots
+docs/               DEPLOY.md, COLLAB.md, README screenshots
 ```
 
 `memory/MEMORY.md` records the traps: what must **never** be renamed, the Windows-specific pitfalls, and which test failures are pre-existing noise.

@@ -8,7 +8,7 @@ import type {
   FolderColor,
 } from "@/db/schema";
 
-import * as ops from "@/db/operations";
+import { storage } from "@/lib/storage";
 
 /**
  * Single Zustand store for the dashboard.
@@ -20,7 +20,7 @@ import * as ops from "@/db/operations";
  * IndexedDB.
  *
  * IndexedDB stays the source of truth; this store is only a cache of the last
- * read. Mutations go through `db/operations` and then call `reload()`, so there
+ * read. Mutations go through `storage` and then call `reload()`, so there
  * is exactly one code path that writes.
  */
 
@@ -112,9 +112,9 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
         // `includeTrashed` is true here because the trash page needs the same
         // array; `selectBoards` is what scopes views down to live boards.
         const [boards, folders, activity] = await Promise.all([
-          ops.listBoards({ includeTrashed: true }),
-          ops.listFolders(),
-          ops.listActivity(),
+          storage.listBoards({ includeTrashed: true }),
+          storage.listFolders(),
+          storage.listActivity(),
         ]);
         set({ boards, folders, activity, loadState: "ready", error: null });
       } catch (error) {
@@ -126,43 +126,47 @@ export const useDashboardStore = create<DashboardState>((set, get) => {
     },
 
     createBoard: withReload(set, get, (name?: string) =>
-      ops.createBoard({ name }),
+      storage.createBoard({ name }),
     ),
     renameBoard: withReload(set, get, (id: string, name: string) =>
-      ops.renameBoard(id, name).then(() => undefined),
+      storage.renameBoard(id, name).then(() => undefined),
     ),
     toggleFavorite: withReload(set, get, (id: string) =>
-      ops.toggleFavorite(id).then(() => undefined),
+      storage.toggleFavorite(id).then(() => undefined),
     ),
     duplicateBoard: withReload(set, get, (id: string) =>
-      ops.duplicateBoard(id).then(() => undefined),
+      storage.duplicateBoard(id).then(() => undefined),
     ),
     moveBoardToFolder: withReload(
       set,
       get,
       (id: string, folderId: string | null) =>
-        ops.moveBoardToFolder(id, folderId).then(() => undefined),
+        storage.moveBoardToFolder(id, folderId).then(() => undefined),
     ),
-    trashBoard: withReload(set, get, (id: string) => ops.trashBoard(id)),
-    restoreBoard: withReload(set, get, (id: string) => ops.restoreBoard(id)),
+    trashBoard: withReload(set, get, (id: string) => storage.trashBoard(id)),
+    restoreBoard: withReload(set, get, (id: string) =>
+      storage.restoreBoard(id),
+    ),
     deleteBoardForever: withReload(set, get, (id: string) =>
-      ops.deleteBoardForever(id),
+      storage.deleteBoardForever(id),
     ),
-    emptyTrash: withReload(set, get, () => ops.emptyTrash()),
+    emptyTrash: withReload(set, get, () => storage.emptyTrash()),
 
     createFolder: withReload(set, get, (name?: string, color?: FolderColor) =>
-      ops.createFolder({
+      storage.createFolder({
         ...(name !== undefined ? { name } : {}),
         ...(color !== undefined ? { color } : {}),
       }),
     ),
     renameFolder: withReload(set, get, (id: string, name: string) =>
-      ops.renameFolder(id, name).then(() => undefined),
+      storage.renameFolder(id, name).then(() => undefined),
     ),
     recolorFolder: withReload(set, get, (id: string, color: FolderColor) =>
-      ops.recolorFolder(id, color).then(() => undefined),
+      storage.recolorFolder(id, color).then(() => undefined),
     ),
-    deleteFolder: withReload(set, get, (id: string) => ops.deleteFolder(id)),
+    deleteFolder: withReload(set, get, (id: string) =>
+      storage.deleteFolder(id),
+    ),
 
     toggleSelected: (id: string) =>
       set((state) => ({

@@ -1,7 +1,7 @@
 /**
  * Mosaic dashboard data model.
  *
- * These types are the contract between the IndexedDB layer (`db/index.ts`), the
+ * These types are the contract between the IndexedDB layer (`lib/storage/indexeddb.ts`), the
  * Zustand stores (`state/`) and every component. They are deliberately plain
  * structural types with no methods so they serialise cleanly to JSON — the whole
  * point of the local-first design is that a row can be shipped to a future

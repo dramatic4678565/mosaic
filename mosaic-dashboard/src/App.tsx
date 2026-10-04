@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
-import { purgeExpiredTrash } from "@/db/operations";
+import { storage } from "@/lib/storage";
 import { ActivityPage } from "@/pages/ActivityPage";
 import { BoardPage } from "@/pages/BoardPage";
 import { BoardsPage } from "@/pages/BoardsPage";
@@ -50,7 +50,7 @@ export const App = () => {
     let cancelled = false;
     (async () => {
       try {
-        await purgeExpiredTrash();
+        await storage.purgeExpiredTrash();
       } catch (error) {
         // A purge failure must not block the dashboard: worst case a stale board
         // lingers in trash until the next boot.

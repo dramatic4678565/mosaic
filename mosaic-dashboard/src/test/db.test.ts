@@ -1,6 +1,23 @@
 import { describe, expect, it } from "vitest";
 
-import {
+import { indexedDbAdapter as storage } from "@/lib/storage/indexeddb";
+
+import { TRASH_RETENTION_DAYS } from "@/db/schema";
+
+/**
+ * These are unit tests for the *local* store, so they bind to `indexedDbAdapter`
+ * directly rather than to `storage` from `@/lib/storage`.
+ *
+ * That is deliberate. `storage` resolves to the HTTP adapter whenever
+ * `VITE_API_URL` is defined, and if someone ever runs the suite with that variable
+ * present these would silently start making network calls against a real Neon
+ * database — slow, order-dependent, and destroying each other's rows. Pinning the
+ * backend keeps the suite hermetic.
+ *
+ * The destructured names below are the adapter's methods, so every call site in
+ * this file reads exactly as it did before the storage refactor.
+ */
+const {
   createBoard,
   createFolder,
   deleteBoardForever,
@@ -26,8 +43,7 @@ import {
   setFavorite,
   toggleFavorite,
   trashBoard,
-} from "@/db/operations";
-import { TRASH_RETENTION_DAYS } from "@/db/schema";
+} = storage;
 
 describe("board CRUD", () => {
   it("creates a board with sensible defaults and logs a create activity", async () => {
@@ -257,7 +273,7 @@ describe("trash", () => {
     // Backdate the first one past the retention window.
     const cutoff =
       Date.now() - (TRASH_RETENTION_DAYS + 1) * 24 * 60 * 60 * 1000;
-    const { db } = await import("@/db/index");
+    const { db } = await import("@/lib/storage/indexeddb");
     await db.boards.update(old.id, { trashedAt: cutoff });
 
     const purged = await purgeExpiredTrash();
@@ -294,7 +310,7 @@ describe("activity stats", () => {
 
   it("excludes events older than a week from last7Days", async () => {
     const board = await createBoard();
-    const { db } = await import("@/db/index");
+    const { db } = await import("@/lib/storage/indexeddb");
     // Backdate the create row beyond the window.
     await db.activity
       .where("boardId")
