@@ -10,6 +10,7 @@ import { SettingsPage } from "@/pages/SettingsPage";
 import { useAuthStore } from "@/state/useAuthStore";
 import { useDashboardStore } from "@/state/useDashboardStore";
 import { AppShell } from "@/components/shell/AppShell";
+import { ClaimGuestDataPrompt } from "@/components/auth/ClaimGuestDataPrompt";
 
 /**
  * Base path the dashboard is mounted at.
@@ -98,6 +99,9 @@ export const App = () => {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AppShell>
+      {/* STEP 4. Renders nothing unless a signed-in user has unclaimed guest rows,
+          so it cannot interrupt an anonymous visit. */}
+      <ClaimGuestDataPrompt />
       {loadState === "error" ? (
         <div role="alert" className="dashboard-global-error">
           Something went wrong loading your boards.

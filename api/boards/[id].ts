@@ -1,14 +1,10 @@
-import {
-  getOwnerUid,
-  json,
-  query,
-  rateLimitOk,
-  readJson,
-  toBoard,
-  toIso,
-} from "../_db.js";
+import { json, query, rateLimitOk, readJson, toBoard, toIso } from "../_db.js";
+
+import { ownerScope, resolveActor } from "../_owner.js";
 
 import type { ApiRequest, ApiResponse, BoardRow } from "../_db.js";
+
+import type { Actor } from "../_owner.js";
 
 /**
  * Single-board endpoint: read, update, delete.
@@ -27,11 +23,14 @@ const FULL_COLUMNS = `id, name, folder_id, favorite, trashed_at, thumbnail, scen
  * is deliberate — a 403 would confirm the id is real, which leaks a little about
  * other users' data.
  */
-const loadOwned = (id: string, uid: string) =>
-  query<BoardRow>(
-    `SELECT ${FULL_COLUMNS} FROM boards WHERE id = $1 AND owner_uid = $2`,
-    [id, uid],
+const loadOwned = (id: string, actor: Actor) => {
+  const scope = ownerScope(actor);
+  return query<BoardRow>(
+    `SELECT ${FULL_COLUMNS} FROM boards b
+     WHERE b.id = $2 AND ${scope.sql}`,
+    [...scope.params, id],
   );
+};
 
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -49,17 +48,19 @@ const isUuid = (value: string) =>
 const handleGet = async (
   id: string,
   res: ApiResponse,
-  uid: string,
+  actor: Actor,
 ): Promise<void> => {
-  const row = (await loadOwned(id, uid))[0];
+  const row = (await loadOwned(id, actor))[0];
   if (!row) {
     json(res, { error: "not found" }, 404);
     return;
   }
 
+  const scope = ownerScope(actor);
   await query(
-    "UPDATE boards SET last_opened_at = now() WHERE id = $1 AND owner_uid = $2",
-    [id, uid],
+    `UPDATE boards b SET last_opened_at = now()
+     WHERE b.id = $2 AND ${scope.sql}`,
+    [...scope.params, id],
   );
 
   json(res, { board: toBoard({ ...row, last_opened_at: new Date() }) });
@@ -83,7 +84,7 @@ const handlePatch = async (
   req: ApiRequest,
   res: ApiResponse,
   id: string,
-  uid: string,
+  actor: Actor,
 ): Promise<void> => {
   const body = readJson(req);
   if (body === null) {
@@ -91,7 +92,7 @@ const handlePatch = async (
     return;
   }
 
-  const owned = await loadOwned(id, uid);
+  const owned = await loadOwned(id, actor);
   if (!owned[0]) {
     json(res, { error: "not found" }, 404);
     return;
@@ -122,9 +123,10 @@ const handlePatch = async (
     const folderId =
       typeof body.folderId === "string" && body.folderId ? body.folderId : null;
     if (folderId !== null) {
+      const fscope = ownerScope(actor, "f");
       const owns = await query(
-        "SELECT 1 FROM folders WHERE id = $1 AND owner_uid = $2",
-        [folderId, uid],
+        `SELECT 1 FROM folders f WHERE f.id = $2 AND ${fscope.sql}`,
+        [...fscope.params, folderId],
       );
       if (owns.length === 0) {
         json(res, { error: "folder not found" }, 404);
@@ -162,10 +164,14 @@ const handlePatch = async (
   // "recent" ordering and the card timestamp render.
   sets.push("updated_at = now()");
 
-  params.push(id, uid);
+  // Scope goes on last so the placeholder numbers line up with `params`. The
+  // owner column is `user_id` or `owner_uid` depending on the actor, so the
+  // fragment is generated rather than hard-coded.
+  const scope = ownerScope(actor);
+  params.push(...scope.params, id);
   const updated = await query<BoardRow>(
-    `UPDATE boards SET ${sets.join(", ")}
-     WHERE id = $${params.length - 1} AND owner_uid = $${params.length}
+    `UPDATE boards b SET ${sets.join(", ")}
+     WHERE b.id = $${params.length} AND ${scope.sql}
      RETURNING ${FULL_COLUMNS}`,
     params,
   );
@@ -179,15 +185,19 @@ const handlePatch = async (
 
   // Audit trail, mirroring `logActivity` in `db/operations.ts`. Written after the
   // update so a failed update cannot leave a phantom event.
+  //
+  // `activity.owner_uid` records the anonymous origin and stays as it is; the
+  // activity rows are found by `board_id`, so they follow the board across a claim
+  // without being touched.
   if (typeof body.name === "string") {
     await query(
       "INSERT INTO activity (owner_uid, board_id, type, detail) VALUES ($1, $2, 'rename', $3)",
-      [uid, id, (body.name as string).trim()],
+      [actor.ownerUid, id, (body.name as string).trim()],
     );
   } else if (typeof body.favorite === "boolean") {
     await query(
       "INSERT INTO activity (owner_uid, board_id, type, detail) VALUES ($1, $2, 'favorite', $3)",
-      [uid, id, body.favorite ? "on" : "off"],
+      [actor.ownerUid, id, body.favorite ? "on" : "off"],
     );
   } else if ("trashedAt" in body && body.trashedAt !== null) {
     // Only trashing is audited. `ActivityType` (schema.ts:78) has no "restore"
@@ -195,7 +205,7 @@ const handlePatch = async (
     // server side.
     await query(
       "INSERT INTO activity (owner_uid, board_id, type) VALUES ($1, $2, 'delete')",
-      [uid, id],
+      [actor.ownerUid, id],
     );
   }
 
@@ -215,11 +225,12 @@ const handlePatch = async (
 const handleDelete = async (
   id: string,
   res: ApiResponse,
-  uid: string,
+  actor: Actor,
 ): Promise<void> => {
+  const scope = ownerScope(actor);
   const removed = await query(
-    "DELETE FROM boards WHERE id = $1 AND owner_uid = $2 RETURNING id",
-    [id, uid],
+    `DELETE FROM boards b WHERE b.id = $2 AND ${scope.sql} RETURNING id`,
+    [...scope.params, id],
   );
   if (removed.length === 0) {
     json(res, { error: "not found" }, 404);
@@ -227,7 +238,7 @@ const handleDelete = async (
   }
   await query("DELETE FROM activity WHERE board_id = $1 AND owner_uid = $2", [
     id,
-    uid,
+    actor.ownerUid,
   ]);
   json(res, { ok: true });
 };
@@ -262,9 +273,9 @@ export default async function handler(
   ctx?: { params?: { id?: string } },
 ): Promise<void> {
   try {
-    const uid = getOwnerUid(req, res);
+    const actor = await resolveActor(req, res);
 
-    if (!rateLimitOk(uid)) {
+    if (!rateLimitOk(actor.userId ?? actor.ownerUid)) {
       json(res, { error: "rate limit exceeded" }, 429);
       return;
     }
@@ -281,15 +292,15 @@ export default async function handler(
     }
 
     if (method === "GET") {
-      await handleGet(id, res, uid);
+      await handleGet(id, res, actor);
       return;
     }
     if (method === "PATCH") {
-      await handlePatch(req, res, id, uid);
+      await handlePatch(req, res, id, actor);
       return;
     }
     if (method === "DELETE") {
-      await handleDelete(id, res, uid);
+      await handleDelete(id, res, actor);
       return;
     }
 

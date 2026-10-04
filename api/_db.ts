@@ -174,6 +174,16 @@ export const getOwnerUid = (req: ApiRequest, res: ApiResponse): string => {
   return uid;
 };
 
+/**
+ * The guest uid carried by this request, or null.
+ *
+ * Reads only — never mints. The claim flow needs to know whether a *pre-existing*
+ * anonymous identity is present, and a function that invented one on demand would
+ * make that question unanswerable: it would always look like a new guest had data.
+ */
+export const readGuestUid = (req: ApiRequest): string | null =>
+  unpack(readCookie(req, UID_COOKIE));
+
 /* -------------------------------------------------------------------------- */
 /* Database                                                                    */
 /* -------------------------------------------------------------------------- */
