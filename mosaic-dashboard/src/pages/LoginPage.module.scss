@@ -1,0 +1,134 @@
+/*
+ * Login page layout.
+ *
+ * Scoped names only — no globals — so nothing here can leak into the dashboard
+ * shell, and the page can be mounted inside AppShell without inheriting its two
+ * column grid.
+ */
+
+.loginPage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 32px 16px;
+}
+
+.loginPage__card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e3e6ea);
+  border-radius: 12px;
+  padding: 28px;
+  /* Centered card, so its own shadow has to be its own stacking context. */
+  box-shadow: 0 8px 28px rgb(15 23 42 / 8%);
+}
+
+.loginPage__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.loginPage__title {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.loginPage__lede {
+  margin: 0 0 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-muted, #5b6676);
+}
+
+.loginPage__form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.loginPage__label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.loginPage__input {
+  font: inherit;
+  font-size: 14px;
+  padding: 9px 11px;
+  border: 1px solid var(--color-border, #cfd5dc);
+  border-radius: 8px;
+  background: var(--color-surface, #fff);
+  color: inherit;
+}
+
+.loginPage__input:focus-visible {
+  outline: 2px solid var(--color-primary, #1b6ef3);
+  outline-offset: 1px;
+}
+
+.loginPage__submit {
+  margin-top: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--color-primary, #1b6ef3);
+  color: #fff;
+  cursor: pointer;
+}
+
+.loginPage__submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.loginPage__secondary {
+  margin-top: 12px;
+  font: inherit;
+  font-size: 13px;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--color-primary, #1b6ef3);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.loginPage__sent {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.loginPage__alert {
+  margin: 0 0 12px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  background: rgb(220 38 38 / 8%);
+  color: #b42318;
+}
+
+.loginPage__foot {
+  margin: 20px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-muted, #5b6676);
+}
+
+.loginPage__note {
+  max-width: 400px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-muted, #5b6676);
+  text-align: center;
+}

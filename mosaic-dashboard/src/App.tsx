@@ -5,7 +5,9 @@ import { storage } from "@/lib/storage";
 import { ActivityPage } from "@/pages/ActivityPage";
 import { BoardPage } from "@/pages/BoardPage";
 import { BoardsPage } from "@/pages/BoardsPage";
+import { LoginPage } from "@/pages/LoginPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { useAuthStore } from "@/state/useAuthStore";
 import { useDashboardStore } from "@/state/useDashboardStore";
 import { AppShell } from "@/components/shell/AppShell";
 
@@ -37,14 +39,20 @@ const BASENAME = import.meta.env.MOSAIC_DASHBOARD_BASENAME ?? "";
 export const App = () => {
   const loadState = useDashboardStore((s) => s.loadState);
   const reload = useDashboardStore((s) => s.reload);
+  const refreshAuth = useAuthStore((s) => s.refresh);
 
   /**
    * Boot sequence:
    * 1. purge expired trash (STEP 7) before the first read, so the grid never
    *    renders a board that is about to disappear
    * 2. load boards / folders / activity
+   * 3. read the session, so the sidebar shows the right account state
    *
    * Both are idempotent, so a React 18 StrictMode double-invoke in dev is safe.
+   *
+   * The three are independent. In particular a failure to read the session must not
+   * stop the board load: a signed-out visitor is the normal case, and the app is
+   * fully usable that way. Step 3 is therefore started without awaiting it.
    */
   useEffect(() => {
     let cancelled = false;
@@ -60,10 +68,13 @@ export const App = () => {
         await reload();
       }
     })();
+
+    void refreshAuth();
+
     return () => {
       cancelled = true;
     };
-  }, [reload]);
+  }, [reload, refreshAuth]);
 
   return (
     <BrowserRouter basename={BASENAME}>
@@ -77,6 +88,9 @@ export const App = () => {
           <Route path="/dashboard/trash" element={<BoardsPage />} />
           <Route path="/dashboard/activity" element={<ActivityPage />} />
           <Route path="/dashboard/settings" element={<SettingsPage />} />
+          {/* STEP 3. Reachable only by an explicit "Sign in" link — nothing
+              redirects here, so the anonymous flow never encounters it. */}
+          <Route path="/login" element={<LoginPage />} />
           {/* Editor hand-off. The dashboard routes the user to the editor app
               with #board=<id>; this route renders the in-dashboard editor view
               used in dev and by the e2e test. */}

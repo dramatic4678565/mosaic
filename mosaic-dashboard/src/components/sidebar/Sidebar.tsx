@@ -9,6 +9,8 @@ import { useFolderDroppable } from "@/components/board/BoardGrid";
 import { t } from "@/lib/i18n";
 import { childFolders, countBoardsInFolder } from "@/lib/selectors";
 import { useDashboardStore } from "@/state/useDashboardStore";
+import { AccountBlock } from "@/components/sidebar/AccountBlock";
+import { useAuthStore } from "@/state/useAuthStore";
 
 /**
  * Persistent navigation (STEP 4).
@@ -26,6 +28,9 @@ export const Sidebar = () => {
   const folders = useDashboardStore((s) => s.folders);
   const createBoard = useDashboardStore((s) => s.createBoard);
   const createFolder = useDashboardStore((s) => s.createFolder);
+  const authUser = useAuthStore((s) => s.user);
+  const authLoading = useAuthStore((s) => s.loading);
+  const authSignOut = useAuthStore((s) => s.signOut);
   const navigate = useNavigate();
 
   const [creatingFolder, setCreatingFolder] = useState(false);
@@ -127,6 +132,17 @@ export const Sidebar = () => {
           {t("nav.settings")}
         </NavLink>
       </nav>
+
+      {/* Account state (STEP 3). Renders nothing when signed out in a build with no
+          API, or while the session is still being read, so it never flashes a
+          "Sign in" link at someone who is signed in. */}
+      <AccountBlock
+        user={authUser}
+        loading={authLoading}
+        onSignOut={() => {
+          void authSignOut();
+        }}
+      />
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
