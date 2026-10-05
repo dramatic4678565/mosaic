@@ -34,7 +34,7 @@ jobs:
       packages: write # required to push to GHCR
 
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       # Buildx is needed for multi-stage builds and for pushing by digest.
       - name: Set up Docker Buildx
