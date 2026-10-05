@@ -20,27 +20,31 @@ name: CI
 on:
   push:
     branches: [main]
+    # A prose-only change cannot break a build, a lint rule or a test, and this job
+    # is the expensive one: about eighteen minutes including the Playwright browser
+    # download and the end-to-end run. Skipping the paths below is the difference
+    # between a documentation push costing eighteen minutes and costing none.
+    #
+    # Deliberately narrow. Anything that can affect compiled output - including
+    # package.json, yarn.lock, any config file and every source directory - is NOT
+    # listed, so a mis-set trigger can only ever cause a run that was not needed,
+    # never a missing run that was.
+    #
+    # Note the nesting. `paths-ignore` is a *filter on the event*, so it belongs
+    # inside `push` and inside `pull_request`, repeated. Written as a sibling of
+    # those two keys it is not part of GitHub's schema, and the failure mode is
+    # nasty: a YAML parser accepts it, but GitHub rejects the whole workflow and
+    # every run dies in 0s with the file path shown instead of the workflow name.
+    paths-ignore: &prose-only
+      - "**/*.md"
+      - "memory/**"
+      - "docs/**"
+      - "LICENSE"
+      - "NOTICE"
   pull_request:
     branches: [main]
-
-  # A prose-only change cannot break a build, a lint rule or a test, and this job
-  # is the expensive one: about eighteen minutes including the Playwright browser
-  # download and the end-to-end run. Skipping the paths below is the difference
-  # between a documentation pull request costing eighteen minutes and costing none.
-  #
-  # Deliberately narrow. Anything that can affect compiled output - including
-  # package.json, yarn.lock, any config file and every source directory - is NOT
-  # listed, so a mis-set trigger can only ever cause a run that was not needed, not
-  # a missing run that was.
-  #
-  # Note the indentation: `paths-ignore` is a key of `on`, not of the document.
-  # At column 0 it is an unknown top-level key and the file is rejected.
-  paths-ignore:
-    - "**/*.md"
-    - "memory/**"
-    - "docs/**"
-    - "LICENSE"
-    - "NOTICE"
+    # Same list, via the anchor above, so the two cannot drift apart.
+    paths-ignore: *prose-only
 
 # Cancel superseded runs on the same ref. Saves minutes on busy PRs and keeps
 # the free tier's concurrent-run limit from being wasted.
