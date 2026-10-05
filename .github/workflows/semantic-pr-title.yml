@@ -30,6 +30,12 @@ jobs:
             chore
             revert
           requireScope: true
+          # Scopes this fork actually uses. `auth` covers the Part 3B surface
+          # (api/auth/*, the magic-link flow, guest claim, sharing); `deps` is what
+          # Dependabot emits, and without it every automated update is permanently
+          # red on this check. Comments must stay OUT of the block below: `|` is a
+          # literal scalar, so a `#` line there is read as a scope name, not a
+          # comment.
           scopes: |
             app
             editor
@@ -40,15 +46,7 @@ jobs:
             upstream
             docker
             repo
-            # Part 3B added a genuine auth surface: api/auth/* serverless
-            # functions, the magic-link flow, guest claim and sharing. Folding it
-            # into "repo" or "dashboard" would make those PRs unreadable, so the
-            # scope is declared here. Same change as PR #19, which widened this
-            # list for the scopes this fork actually uses.
             auth
-            # Dependabot titles its own pull requests, so its scope has to be
-            # permitted or every automated update is permanently red on this
-            # check. "deps" is what it emits.
             deps
           ignoreLabels: |
             skip-semantic-title
