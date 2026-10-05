@@ -48,6 +48,7 @@ jobs:
             repo
             auth
             deps
+            deps-dev
           ignoreLabels: |
             skip-semantic-title
         env:

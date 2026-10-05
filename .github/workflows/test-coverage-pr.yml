@@ -1,6 +1,15 @@
 name: Test Coverage PR
 on:
-  pull_request:
+  # Coverage reports, not a gate. This repository has no branch protection and no
+  # required checks, so a coverage comment on a pull request stops nothing that is
+  # not already stopped by ci.yml - which runs the whole suite regardless - while
+  # costing a second full test run with instrumentation, about twelve minutes per
+  # push. Running it on main instead reports the same number once per merge.
+  #
+  # The account exhausted its 2,000 free Actions minutes, mostly on repeated
+  # versions of this job; see the note in ci.yml.
+  push:
+    branches: [main]
 
 jobs:
   coverage:

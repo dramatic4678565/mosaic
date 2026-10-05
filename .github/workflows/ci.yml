@@ -20,8 +20,31 @@ name: CI
 on:
   push:
     branches: [main]
+    # A prose-only change cannot break a build, a lint rule or a test, and this job
+    # is the expensive one: about eighteen minutes including the Playwright browser
+    # download and the end-to-end run. Skipping the paths below is the difference
+    # between a documentation push costing eighteen minutes and costing none.
+    #
+    # Deliberately narrow. Anything that can affect compiled output - including
+    # package.json, yarn.lock, any config file and every source directory - is NOT
+    # listed, so a mis-set trigger can only ever cause a run that was not needed,
+    # never a missing run that was.
+    #
+    # Note the nesting. `paths-ignore` is a *filter on the event*, so it belongs
+    # inside `push` and inside `pull_request`, repeated. Written as a sibling of
+    # those two keys it is not part of GitHub's schema, and the failure mode is
+    # nasty: a YAML parser accepts it, but GitHub rejects the whole workflow and
+    # every run dies in 0s with the file path shown instead of the workflow name.
+    paths-ignore: &prose-only
+      - "**/*.md"
+      - "memory/**"
+      - "docs/**"
+      - "LICENSE"
+      - "NOTICE"
   pull_request:
     branches: [main]
+    # Same list, via the anchor above, so the two cannot drift apart.
+    paths-ignore: *prose-only
 
 # Cancel superseded runs on the same ref. Saves minutes on busy PRs and keeps
 # the free tier's concurrent-run limit from being wasted.
@@ -85,7 +108,7 @@ jobs:
       # this the install re-links ~1.5k packages on every run.
       - name: Restore yarn cache
         id: yarn-cache
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             ~/.cache/yarn
@@ -145,14 +168,14 @@ jobs:
 
       - name: Upload Playwright report on failure
         if: failure()
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report
           path: mosaic-dashboard/playwright-report
           retention-days: 7
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: builds-${{ github.sha }}
           path: |
