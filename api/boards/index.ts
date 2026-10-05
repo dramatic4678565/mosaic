@@ -1,5 +1,4 @@
 import {
-  getOwnerUid,
   json,
   query,
   rateLimitOk,
@@ -8,7 +7,11 @@ import {
   toBoard,
 } from "../_db.js";
 
+import { ownerColumn, ownerScope, resolveActor } from "../_owner.js";
+
 import type { ApiRequest, ApiResponse, BoardRow } from "../_db.js";
+
+import type { Actor } from "../_owner.js";
 
 /**
  * Collection endpoint: list and create boards.
@@ -32,9 +35,16 @@ const LIST_COLUMNS = `id, name, folder_id, favorite, trashed_at, thumbnail,
  * Query parameters mirror `listBoards` in `db/operations.ts` so the API adapter
  * in STEP 4 can be a drop-in replacement for the Dexie one:
  *
- * - `trashed=1` -> only soft-deleted boards (the trash page). The default is
- *   live boards only, which is what `listBoards` does with `includeTrashed:
- *   false`.
+ * - `trashed=1` -> only soft-deleted boards (the trash page).
+ * - `trashed=all` -> no trash filter at all: live *and* trashed.
+ *
+ * The two-value parameter is not decoration. `includeTrashed` in the storage
+ * interface means "give me everything, I will filter", which is what
+ * `useDashboardStore.reload()` asks for on every page load. Folding it onto
+ * `trashed=1` — the obvious translation — returns only the bin, so the dashboard
+ * renders an empty grid while the rows sit there in Postgres. Omitting the parameter
+ * keeps its existing meaning of live-only, which is what the default asks for.
+ *
  * - `folderId=<uuid>` -> boards in that folder. `folderId=unfiled` selects boards
  *   with no folder, matching `selectors.ts`'s "null means unfiled".
  *
@@ -42,36 +52,43 @@ const LIST_COLUMNS = `id, name, folder_id, favorite, trashed_at, thumbnail,
  * real "recent" sort (`selectors.ts:47`) rather than plain `updated_at` — a board
  * that was opened but not edited should still sort as recently used.
  *
- * Every query is scoped by `owner_uid`, so one owner can never read another's
- * rows regardless of the id they pass.
+ * Every query is scoped by the caller — `user_id` when signed in, `owner_uid`
+ * otherwise (see `_owner.ts`) — so one account can never read another's rows
+ * regardless of the id they pass.
  */
-const handleGet = async (req: ApiRequest, res: ApiResponse, uid: string) => {
+const handleGet = async (req: ApiRequest, res: ApiResponse, actor: Actor) => {
   const params = searchParams(req);
-  const trashed = params.get("trashed") === "1";
+  const trashedParam = params.get("trashed");
   const folderParam = params.get("folderId");
 
-  const trashFilter = trashed
-    ? "AND trashed_at IS NOT NULL"
-    : "AND trashed_at IS NULL";
+  // Three states, not two: only-trashed, only-live, or unfiltered. Built as a
+  // fragment rather than a boolean so "no filter" cannot be spelled by accident.
+  const trashFilter =
+    trashedParam === "1"
+      ? "AND trashed_at IS NOT NULL"
+      : trashedParam === "all"
+      ? ""
+      : "AND trashed_at IS NULL";
   const order = "ORDER BY COALESCE(last_opened_at, updated_at) DESC";
+  const scope = ownerScope(actor);
 
   const rows =
     folderParam === null
       ? await query<BoardRow>(
-          `SELECT ${LIST_COLUMNS} FROM boards
-           WHERE owner_uid = $1 ${trashFilter} ${order}`,
-          [uid],
+          `SELECT ${LIST_COLUMNS} FROM boards b
+           WHERE ${scope.sql} ${trashFilter} ${order}`,
+          scope.params,
         )
       : folderParam === "unfiled"
       ? await query<BoardRow>(
-          `SELECT ${LIST_COLUMNS} FROM boards
-             WHERE owner_uid = $1 AND folder_id IS NULL ${trashFilter} ${order}`,
-          [uid],
+          `SELECT ${LIST_COLUMNS} FROM boards b
+             WHERE ${scope.sql} AND b.folder_id IS NULL ${trashFilter} ${order}`,
+          scope.params,
         )
       : await query<BoardRow>(
-          `SELECT ${LIST_COLUMNS} FROM boards
-             WHERE owner_uid = $1 AND folder_id = $2 ${trashFilter} ${order}`,
-          [uid, folderParam],
+          `SELECT ${LIST_COLUMNS} FROM boards b
+             WHERE ${scope.sql} AND b.folder_id = $2 ${trashFilter} ${order}`,
+          [...scope.params, folderParam],
         );
 
   json(res, { boards: rows.map(toBoard) });
@@ -94,7 +111,7 @@ const handleGet = async (req: ApiRequest, res: ApiResponse, uid: string) => {
  * foreign key. The FK would happily accept another owner's folder uuid, which
  * would leak that folder's name into the sidebar.
  */
-const handlePost = async (req: ApiRequest, res: ApiResponse, uid: string) => {
+const handlePost = async (req: ApiRequest, res: ApiResponse, actor: Actor) => {
   const body = readJson(req);
   if (body === null) {
     json(res, { error: "invalid JSON body" }, 400);
@@ -112,9 +129,10 @@ const handlePost = async (req: ApiRequest, res: ApiResponse, uid: string) => {
   const sceneBytes = scene === null ? null : scene.length;
 
   if (folderId !== null) {
+    const scope = ownerScope(actor, "f");
     const owned = await query(
-      "SELECT 1 FROM folders WHERE id = $1 AND owner_uid = $2",
-      [folderId, uid],
+      `SELECT 1 FROM folders f WHERE ${scope.sql} AND f.id = $2`,
+      [...scope.params, folderId],
     );
     if (owned.length === 0) {
       json(res, { error: "folder not found" }, 404);
@@ -122,19 +140,27 @@ const handlePost = async (req: ApiRequest, res: ApiResponse, uid: string) => {
     }
   }
 
+  // A signed-in board is filed under `user_id`; an anonymous one under
+  // `owner_uid`. Setting both would be wrong: `owner_uid` is what the guest cookie
+  // scopes by, and leaving it populated would keep the row visible to a browser
+  // that should no longer own it.
+  const owner = ownerColumn(actor);
+
   // The id comes from Postgres (gen_random_uuid()) so the client never has to
   // invent one.
   const inserted = await query<BoardRow>(
-    `INSERT INTO boards (owner_uid, name, folder_id, thumbnail, scene, scene_bytes)
+    `INSERT INTO boards (${owner.column}, name, folder_id, thumbnail, scene, scene_bytes)
      VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING ${LIST_COLUMNS}, scene`,
-    [uid, name, folderId, thumbnail, scene, sceneBytes],
+    [owner.value, name, folderId, thumbnail, scene, sceneBytes],
   );
 
   const board = toBoard(inserted[0]);
+  // `activity.owner_uid` is NOT NULL and predates accounts; it keeps tracking the
+  // anonymous origin, which is also what `countGuestRows` keys off.
   await query(
     "INSERT INTO activity (owner_uid, board_id, type) VALUES ($1, $2, 'create')",
-    [uid, board.id as string],
+    [actor.ownerUid, board.id as string],
   );
 
   json(res, { board }, 201);
@@ -145,9 +171,9 @@ export default async function handler(
   res: ApiResponse,
 ): Promise<void> {
   try {
-    const uid = getOwnerUid(req, res);
+    const actor = await resolveActor(req, res);
 
-    if (!rateLimitOk(uid)) {
+    if (!rateLimitOk(actor.userId ?? actor.ownerUid)) {
       json(res, { error: "rate limit exceeded" }, 429);
       return;
     }
@@ -155,11 +181,11 @@ export default async function handler(
     const method = req.method ?? "GET";
 
     if (method === "GET") {
-      await handleGet(req, res, uid);
+      await handleGet(req, res, actor);
       return;
     }
     if (method === "POST") {
-      await handlePost(req, res, uid);
+      await handlePost(req, res, actor);
       return;
     }
 

@@ -113,12 +113,23 @@ export const createApiAdapter = ({
     }
   };
 
+  /**
+   * `includeTrashed: true` means "give me everything, I will filter".
+   *
+   * That is what `useDashboardStore.reload()` asks for and what the Dexie adapter
+   * delivers, because it has no trash filter to push down — it returns every row and
+   * the selectors narrow it. Translating the flag to `?trashed=1` is *not* the same
+   * request: the server answers that with only trashed boards, so the dashboard's
+   * main list came back holding nothing but the bin. `trashed=all` says explicitly
+   * "no trash filter", and the omission of the parameter keeps its existing meaning
+   * of live-only.
+   */
   const listBoards = async (
     options: ListBoardsOptions = {},
   ): Promise<Board[]> => {
     const params = new URLSearchParams();
     if (options.includeTrashed) {
-      params.set("trashed", "1");
+      params.set("trashed", "all");
     }
     if (options.folderId !== undefined) {
       params.set(
@@ -129,6 +140,19 @@ export const createApiAdapter = ({
     const qs = params.toString();
     const { boards } = await request<{ boards: Board[] }>(
       `/api/boards${qs ? `?${qs}` : ""}`,
+    );
+    return boards;
+  };
+
+  /**
+   * The bin, and only the bin.
+   *
+   * Spelled out rather than reusing `listBoards({includeTrashed:true})`, because that
+   * now means "everything" and the trash page must never show a live board.
+   */
+  const listTrashedOnly = async (): Promise<Board[]> => {
+    const { boards } = await request<{ boards: Board[] }>(
+      "/api/boards?trashed=1",
     );
     return boards;
   };
@@ -248,12 +272,12 @@ export const createApiAdapter = ({
     await local.deleteBoardForever(id);
   };
 
-  const listTrashedBoards = () => listBoards({ includeTrashed: true });
+  const listTrashedBoards = () => listTrashedOnly();
 
   const listTrashedBoardsLite = async () => {
     // The API already omits `scene` from listings, so this needs no extra work —
     // it stays a separate method because the interface promises it.
-    const boards = await listTrashedBoards();
+    const boards = await listTrashedOnly();
     return boards.map(({ scene: _scene, ...rest }) => rest);
   };
 
@@ -266,7 +290,14 @@ export const createApiAdapter = ({
     const days = retentionDays ?? TRASH_RETENTION_DAYS;
     const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
     const rows = await listTrashedBoards();
-    const expired = rows.filter((b) => (b.trashedAt ?? 0) < cutoff);
+    // `trashedAt !== null` is load-bearing, not redundant. The server filters on
+    // `?trashed=1`, but this function *deletes*, so it must not depend on that
+    // filter being right: with `(b.trashedAt ?? 0) < cutoff` a live board reads as
+    // epoch 0, looks 56 years old, and gets purged while the user is looking at it.
+    // A board that is not in the trash is never expired, whatever it returns.
+    const expired = rows.filter(
+      (b) => b.trashedAt !== null && b.trashedAt < cutoff,
+    );
     await Promise.all(expired.map((b) => deleteBoardForever(b.id)));
     return expired.map((b) => b.id);
   };

@@ -20,6 +20,7 @@ mosaic-dashboard/test-results-dev
 infra/excalidraw-room/
 
 mosaic-dashboard/test-results-collab
+mosaic-dashboard/test-results-auth
 
 # Neon agent skills + MCP config installed by 'neon mcp' / 'neon skills'.
 # Third-party tooling artifacts, not project source.

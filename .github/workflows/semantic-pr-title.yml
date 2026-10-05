@@ -40,6 +40,12 @@ jobs:
             upstream
             docker
             repo
+            # Part 3B added a genuine auth surface: api/auth/* serverless
+            # functions, the magic-link flow, guest claim and sharing. Folding it
+            # into "repo" or "dashboard" would make those PRs unreadable, so the
+            # scope is declared here. Same change as PR #19, which widened this
+            # list for the scopes this fork actually uses.
+            auth
           ignoreLabels: |
             skip-semantic-title
         env:

@@ -1,0 +1,91 @@
+/*
+ * Shared-board viewer.
+ *
+ * Rendered outside AppShell, so every rule here is explicit rather than inherited.
+ * The layout is a fixed header over a full-height canvas: a whiteboard viewer that
+ * scrolls its own canvas is useless.
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  /* Full viewport height. dvh rather than vh so a mobile browser's collapsing URL bar
+     does not crop the canvas. */
+  height: 100vh;
+  height: 100dvh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  height: 48px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--color-border, #e3e6ea);
+  background: var(--color-surface, #fff);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  flex: none;
+}
+
+.title {
+  font-size: 13px;
+  color: var(--color-text-muted, #5b6676);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  margin-left: auto;
+  flex: none;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-surface-muted, #f1f3f5);
+  color: var(--color-text-muted, #5b6676);
+}
+
+.frame {
+  flex: 1 1 auto;
+  width: 100%;
+  border: 0;
+}
+
+.missing {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.missing h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.missing p {
+  margin: 0;
+  max-width: 420px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-muted, #5b6676);
+}
+
+.missing a {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-primary, #1b6ef3);
+}

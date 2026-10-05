@@ -45,6 +45,9 @@ test-results
 mosaic-dashboard/test-results-dev
 mosaic-dashboard/test-results-collab
 
+# Auth e2e suite artifacts (playwright.auth.config.ts).
+mosaic-dashboard/test-results-auth
+
 # Neon agent skills + MCP config (installed by the Neon CLI).
 .agents/
 opencode.json

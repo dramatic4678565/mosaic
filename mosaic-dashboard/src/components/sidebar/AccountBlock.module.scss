@@ -1,0 +1,37 @@
+.account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border, #e3e6ea);
+  font-size: 12px;
+  min-width: 0;
+}
+
+.email {
+  /* The address can be long and the sign-out button must stay reachable, so the
+     text truncates rather than pushing the button off the sidebar. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted, #5b6676);
+}
+
+.signIn,
+.signOut {
+  flex: none;
+  font: inherit;
+  font-size: 12px;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--color-primary, #1b6ef3);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.signOut {
+  color: var(--color-text-muted, #5b6676);
+}

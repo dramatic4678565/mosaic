@@ -15,6 +15,8 @@ export type BoardMenuActions = {
   onDuplicate: () => void;
   onMove: (folderId: string | null) => void;
   onDownload: (format: DownloadFormat) => void;
+  /** STEP 5. Opens the share modal rather than sharing directly. */
+  onShare: () => void;
   onTrash: () => void;
   onRestore: () => void;
   onDeleteForever: () => void;
@@ -163,6 +165,16 @@ export const BoardContextMenu = ({
             </div>
           ) : null}
 
+          <div className={styles.separator} />
+          {/* Sharing is only offered for a live board. A trashed board's link stops
+              working (the public route excludes trashed rows), so offering it there
+              would hand out a URL that 404s. */}
+          <Item
+            onClick={closeThen(onClose, actions.onShare)}
+            testId="menu-share"
+          >
+            {t("board.action.share")}
+          </Item>
           <div className={styles.separator} />
           <Item
             onClick={closeThen(onClose, actions.onTrash)}

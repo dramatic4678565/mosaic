@@ -9,13 +9,15 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:e2e": "tsc --noEmit && vite build --mode e2e",
+    "build:e2e:auth": "tsc --noEmit && vite build --mode e2e-auth",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "test:e2e:dev": "playwright test --config=playwright.dev.config.ts",
-    "test:e2e:collab": "playwright test --config=playwright.collab.config.ts"
+    "test:e2e:collab": "playwright test --config=playwright.collab.config.ts",
+    "test:e2e:auth": "playwright test --config=playwright.auth.config.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",

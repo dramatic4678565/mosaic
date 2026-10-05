@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { BoardContextMenu } from "./BoardContextMenu";
+import { ShareModal } from "./ShareModal";
 
 import styles from "./BoardCard.module.scss";
 
@@ -56,6 +57,9 @@ export const BoardCard = ({
   // The menu anchors to the "..." button; captured so the popover can position
   // itself under the exact element that was clicked.
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  // STEP 5: which board, if any, has the share dialog open. Local to the card so
+  // two cards on screen cannot both hold a dialog.
+  const [sharing, setSharing] = useState(false);
 
   const renameBoard = useDashboardStore((s) => s.renameBoard);
   const toggleFavorite = useDashboardStore((s) => s.toggleFavorite);
@@ -267,10 +271,20 @@ export const BoardCard = ({
             void moveBoardToFolder(board.id, folderId),
           onDownload: (format: DownloadFormat) =>
             void downloadBoard(board, format),
+          // Opens the dialog; the board id is threaded through so the dialog does
+          // not need to be handed the whole row.
+          onShare: () => setSharing(true),
           onTrash: () => void trashBoard(board.id),
           onRestore: () => void restoreBoard(board.id),
           onDeleteForever: () => void deleteBoardForever(board.id),
         }}
+      />
+
+      <ShareModal
+        boardId={board.id}
+        boardName={board.name}
+        open={sharing}
+        onClose={() => setSharing(false)}
       />
     </div>
   );

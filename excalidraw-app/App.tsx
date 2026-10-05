@@ -156,6 +156,7 @@ import {
   readBoardRecord,
   startBoardAutosave,
 } from "./boardMode";
+import { fetchSharedBoard, getShareTokenFromHash } from "./shareMode";
 
 import type { CollabAPI } from "./collab/Collab";
 
@@ -633,6 +634,61 @@ const ExcalidrawWrapper = () => {
       return () => {
         cancelled = true;
         disposeAutosave?.();
+      };
+    }
+
+    // Mosaic "shared board" mode (Part 3B, STEP 5).
+    //
+    // Structurally identical to board mode above — same early return, same
+    // initial-state plumbing — with three differences that matter: the source is an
+    // API token rather than IndexedDB, there is no autosave, and the scene opens in
+    // view mode so the canvas cannot be edited at all.
+    const shareToken = getShareTokenFromHash();
+    if (shareToken) {
+      let cancelledShare = false;
+
+      void (async () => {
+        try {
+          const shared = await fetchSharedBoard(shareToken);
+          if (cancelledShare) {
+            return;
+          }
+
+          if (!shared) {
+            // Resolve rather than reject: a pending initial-state promise leaves the
+            // editor permanently blank with nothing logged.
+            console.warn("[mosaic] shared board unavailable", shareToken);
+            initialStatePromiseRef.current.promise.resolve(null);
+            return;
+          }
+
+          const stored = parseStoredScene(shared.scene);
+          initialStatePromiseRef.current.promise.resolve(
+            stored
+              ? {
+                  elements: restoreElements(stored.elements as any, null, {
+                    repairBindings: true,
+                    deleteInvisibleElements: true,
+                  }),
+                  appState: {
+                    ...restoreAppState(stored.appState as any, null),
+                    // View mode is what removes the editing affordances. The API
+                    // refuses writes regardless, so this is presentation, not
+                    // enforcement.
+                    viewModeEnabled: true,
+                  },
+                  ...(stored.files ? { files: stored.files as any } : {}),
+                }
+              : null,
+          );
+        } catch (error) {
+          console.error("[mosaic] failed to load shared board", error);
+          initialStatePromiseRef.current.promise.resolve(null);
+        }
+      })();
+
+      return () => {
+        cancelledShare = true;
       };
     }
 

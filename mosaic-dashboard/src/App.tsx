@@ -1,13 +1,23 @@
 import { useEffect } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+} from "react-router-dom";
 
 import { storage } from "@/lib/storage";
 import { ActivityPage } from "@/pages/ActivityPage";
 import { BoardPage } from "@/pages/BoardPage";
 import { BoardsPage } from "@/pages/BoardsPage";
+import { LoginPage } from "@/pages/LoginPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { SharedBoardPage } from "@/pages/SharedBoardPage";
+import { useAuthStore } from "@/state/useAuthStore";
 import { useDashboardStore } from "@/state/useDashboardStore";
 import { AppShell } from "@/components/shell/AppShell";
+import { ClaimGuestDataPrompt } from "@/components/auth/ClaimGuestDataPrompt";
 
 /**
  * Base path the dashboard is mounted at.
@@ -34,17 +44,37 @@ import { AppShell } from "@/components/shell/AppShell";
  */
 const BASENAME = import.meta.env.MOSAIC_DASHBOARD_BASENAME ?? "";
 
+/**
+ * Layout route for everything that wants the two-column shell.
+ *
+ * The sidebar, the account block and the board grid all assume an owner with an
+ * editable store, so a read-only shared-board viewer must not be inside them.
+ * Routing the shell through a layout keeps that boundary in one place instead of
+ * duplicated per route.
+ */
+const ShellLayout = () => (
+  <AppShell>
+    <Outlet />
+  </AppShell>
+);
+
 export const App = () => {
   const loadState = useDashboardStore((s) => s.loadState);
   const reload = useDashboardStore((s) => s.reload);
+  const refreshAuth = useAuthStore((s) => s.refresh);
 
   /**
    * Boot sequence:
    * 1. purge expired trash (STEP 7) before the first read, so the grid never
    *    renders a board that is about to disappear
    * 2. load boards / folders / activity
+   * 3. read the session, so the sidebar shows the right account state
    *
    * Both are idempotent, so a React 18 StrictMode double-invoke in dev is safe.
+   *
+   * The three are independent. In particular a failure to read the session must not
+   * stop the board load: a signed-out visitor is the normal case, and the app is
+   * fully usable that way. Step 3 is therefore started without awaiting it.
    */
   useEffect(() => {
     let cancelled = false;
@@ -60,15 +90,31 @@ export const App = () => {
         await reload();
       }
     })();
+
+    void refreshAuth();
+
     return () => {
       cancelled = true;
     };
-  }, [reload]);
+  }, [reload, refreshAuth]);
 
   return (
     <BrowserRouter basename={BASENAME}>
-      <AppShell>
-        <Routes>
+      {/*
+        ONE route table, not two.
+
+        A shared board must render without the shell, and the obvious way to do that
+        is a second sibling `<Routes>`. That does not work: each `<Routes>` matches
+        independently, so the `*` catch-all below also matched `/share/:token`,
+        navigated to /dashboard, and won the race. The viewer silently landed on the
+        dashboard — which is what the first run of this suite showed.
+
+        A layout route is the correct shape: the shell wraps the routes that want it,
+        and the one route that does not sits beside them.
+      */}
+      <Routes>
+        <Route path="/share/:token" element={<SharedBoardPage />} />
+        <Route element={<ShellLayout />}>
           {/* STEP 2 route table */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<BoardsPage />} />
@@ -77,13 +123,19 @@ export const App = () => {
           <Route path="/dashboard/trash" element={<BoardsPage />} />
           <Route path="/dashboard/activity" element={<ActivityPage />} />
           <Route path="/dashboard/settings" element={<SettingsPage />} />
+          {/* STEP 3. Reachable only by an explicit "Sign in" link — nothing
+              redirects here, so the anonymous flow never encounters it. */}
+          <Route path="/login" element={<LoginPage />} />
           {/* Editor hand-off. The dashboard routes the user to the editor app
               with #board=<id>; this route renders the in-dashboard editor view
               used in dev and by the e2e test. */}
           <Route path="/board/:id" element={<BoardPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </AppShell>
+        </Route>
+      </Routes>
+      {/* STEP 4. Renders nothing unless a signed-in user has unclaimed guest rows,
+          so it cannot interrupt an anonymous visit. */}
+      <ClaimGuestDataPrompt />
       {loadState === "error" ? (
         <div role="alert" className="dashboard-global-error">
           Something went wrong loading your boards.

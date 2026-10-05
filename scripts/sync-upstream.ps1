@@ -40,6 +40,7 @@ $PolicyPath = Join-Path $RepoRoot 'scripts\sync-upstream.policy.json'
 
 function Write-Log { param([string]$Message) Write-Host "==> $Message" -ForegroundColor Cyan }
 function Write-Warn { param([string]$Message) Write-Host "WARN  $Message" -ForegroundColor Yellow }
+function Write-Fail { param([string]$Message) Write-Host "FAIL  $Message" -ForegroundColor Red; exit 1 }
 function Die         { param([string]$Message) Write-Host "FAIL  $Message" -ForegroundColor Red; exit 1 }
 
 # ---------------------------------------------------------------------------
@@ -288,17 +289,27 @@ Per UPSTREAM_SYNC.md:
      -replace '%SHA%', $UpstreamSha `
      -replace '%BEHIND%', $Behind
 
-    $prUrl = & gh pr create --label $PrLabel `
-        --title "chore(upstream): sync with upstream/master ($UpstreamSha)" `
+    # The label is deliberately NOT passed to `--label` here: `gh pr create --label x`
+    # fails outright when label x does not exist, which would turn a cosmetic detail
+    # into a failed sync. It is created and applied afterwards instead.
+    $prUrl = & gh pr create `
+        --title "chore(repo): sync with upstream/master ($UpstreamSha)" `
         --body $body 2>&1
 
     if ($LASTEXITCODE -eq 0) {
         Write-Log "PR opened: $prUrl"
     }
     else {
-        Write-Warn 'could not open the PR (gh may be unauthenticated)'
+        # Fatal, not a warning. This used to warn and fall through, so the script
+        # exited 0 after pushing a branch without ever opening a PR — a green
+        # result for work that did not happen. Kept in step with sync-upstream.sh.
+        Write-Fail "could not open the PR. gh said:`n$prUrl`n" +
+        "Branch $SyncBranch was pushed; open it manually:" +
+        "  gh pr create --base main --head $SyncBranch " +
+        "--title 'chore(repo): sync with upstream/master ($UpstreamSha)'"
     }
 }
 else {
-    Write-Warn 'gh not found; branch pushed but no PR opened'
+    Write-Fail "'gh' not found, so no PR could be opened. Branch $SyncBranch was pushed;" +
+    " open it manually with gh pr create --base main --head $SyncBranch"
 }

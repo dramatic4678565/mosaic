@@ -111,6 +111,14 @@ yarn test:e2e:dev     # Playwright against running dev servers (needs `yarn star
 yarn test:e2e:collab  # collaboration latency, measured against the live room server
 yarn verify:brand     # rebrand guard — did an internal identifier get renamed?
 yarn db:migrate       # apply db/migrations to Neon (needs DATABASE_URL)
+yarn test:e2e:auth    # Playwright: account journeys against a mock API
+```
+
+`yarn test:e2e:auth` needs its own build, because accounts cannot be exercised without a server and the default e2e build deliberately has none:
+
+```bash
+yarn --cwd mosaic-dashboard build:e2e:auth
+yarn --cwd mosaic-dashboard test:e2e:auth
 ```
 
 `yarn verify:brand` is the most important one after touching anything bulk. See [`REBRAND.md`](REBRAND.md).
@@ -139,6 +147,22 @@ Both must be **one origin**. Three settings have to agree, and each app and the 
 Get one wrong and the editor 404s a hashed chunk and renders a blank canvas with no error. `scripts/build-e2e.mjs` sets them together for the e2e build.
 
 Requires a secure context (HTTPS, or `localhost`) — IndexedDB, service workers and the editor's workers all need one.
+
+---
+
+## Accounts & sharing
+
+Boards live in **Neon Postgres**, reached through serverless functions under `/api`. Accounts exist, and nothing about them is required to use the app.
+
+**Signing in is optional.** There is no route that redirects to `/login`, and a failure in `/api/auth/*` degrades nothing. A visitor who never signs in works entirely in their own browser and never learns accounts exist. In local development there is no server at all, so the Sign in link is not even rendered.
+
+**There are no passwords.** A magic link is emailed to you and the link _is_ the proof, which removes password storage, reset flows and breach handling from the codebase entirely. `POST /api/auth/request-link` answers `{"ok": true}` for every accepted address — any other response would be an account-existence oracle.
+
+**Guest boards are handed over, not abandoned.** Boards made before signing in stay in Postgres under the visitor's cookie. On first login, a one-time prompt offers to move them onto the account; skipping is reversible, and the guest cookie is left intact.
+
+**Sharing is one link.** Any board can be published as a 256-bit token; anyone holding it can view the board read-only, with no account, and cannot re-share it. The token is unguessable on purpose — a sequential id would let anyone walk `/share/1`, `/share/2` and read everything anyone ever shared. Revoking kills the link immediately.
+
+The full picture, including how to configure Resend and how to migrate a guest user, is in [`docs/AUTH.md`](docs/AUTH.md).
 
 ---
 
@@ -179,8 +203,9 @@ excalidraw-app/     editor app + board mode (bridge to the dashboard)
 packages/           excalidraw/* packages + mosaic-brand
 mosaic-dashboard/   dashboard app (boards, folders, activity, trash)
   src/lib/storage/  StorageAdapter interface + indexeddb/api backends
+  src/lib/auth.ts   session client (magic link, claim, sign out)
 docker/             nginx config
-api/                Vercel serverless functions (health, boards)
+api/                Vercel serverless functions (health, boards, auth, sharing)
 db/                 Postgres schema + migrator
 scripts/
   brand/            rebrand tooling + verification
