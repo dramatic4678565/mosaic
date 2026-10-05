@@ -1,0 +1,42 @@
+#!/bin/sh
+# Refuse a direct push to main.
+#
+# This is a soft guard, not protection. Branch protection is unavailable on this
+# repository: it is private and on the free plan, and GitHub answers
+#   403 "Upgrade to GitHub Pro or make this repository public"
+# for any protection request. So nothing server-side stops a push to main, and
+# this hook is the only local speed bump in its place.
+#
+# What it does and does not buy:
+#   - It stops an accidental `git push` from your own machine, which is the
+#     common case.
+#   - It does NOT stop `git push --no-verify`, another clone, or the GitHub API.
+#     Treat it as a speed bump, not a guarantee.
+#
+# It also refuses force-pushes specifically, because main is the branch whose
+# history every squash merge and every upstream sync is built on, and a rewritten
+# main cannot be reconciled with the PRs that are already merged against it.
+#
+# Releases are tags, not pushes to main, so `git push --tags` is unaffected.
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Collect the remote refs this push would touch, so a push of the form
+# `git push origin main` is caught even when HEAD is somewhere else.
+PUSH_REFS=$(git rev-parse --recurse-submodules --symbolic-full-name --remotes="$(git config --get branch.$BRANCH.remote || echo origin)" 2>/dev/null | sed 's#^[^/]*/##')
+
+if [ "$BRANCH" = "main" ] || echo "$PUSH_REFS" | grep -qx 'main'; then
+  echo "Refusing: main is protected by policy."
+  echo
+  echo "  main is the branch every squash merge and upstream sync is built on."
+  echo "  Work on a branch and open a pull request instead:"
+  echo
+  echo "    git switch -c <branch-name>"
+  echo "    git push -u origin <branch-name>"
+  echo "    gh pr create --base main --head <branch-name>"
+  echo
+  echo "Need to bypass deliberately? git push --no-verify"
+  echo "Bypassing is occasionally right - a revert, or an upstream sync merge -"
+  echo "but it should be a conscious decision, not a reflex."
+  exit 1
+fi
