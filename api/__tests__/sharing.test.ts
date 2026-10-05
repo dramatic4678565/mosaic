@@ -177,9 +177,13 @@ describe("POST /api/boards/[id]/share", () => {
       { share_token: "x", share_mode: "view" },
     ]);
     await share(req({ method: "POST" }), res(), { params: { id: ID } });
-    expect(sqls("UPDATE boards b SET share_token")[0].sql).toContain(
-      "user_id = $1",
-    );
+    const call = sqls("UPDATE boards b SET share_token")[0];
+    expect(call.sql).toContain("user_id = $2");
+    // $1 is the board id and $2 the owner. Sharing them is a runtime type error in
+    // Postgres, which is exactly how this was found.
+    expect(call.sql).toContain("b.id = $1");
+    expect(call.params[0]).toBe(ID);
+    expect(call.params[1]).toBe("user-1");
   });
 
   it("answers 404 for a board that is not the caller's", async () => {

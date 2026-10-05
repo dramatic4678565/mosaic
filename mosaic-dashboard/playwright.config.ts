@@ -41,8 +41,13 @@ export default defineConfig({
    * outbound network access to the deployed room server — a Render cold start
    * must never be able to turn this hermetic suite red. It has its own config
    * (`playwright.collab.config.ts`, `yarn test:e2e:collab`).
+   *
+   * `auth-flow.spec.ts` cannot run here at all: this config builds the dashboard
+   * with no `VITE_API_URL`, so the app has no backend and every account spec fails
+   * on a missing `/api`. It needs the in-memory mock and an API-mode build, so it
+   * has its own config (`playwright.auth.config.ts`, `yarn test:e2e:auth`).
    */
-  testIgnore: /(dev-smoke|collab-latency)\.spec\.ts/,
+  testIgnore: /(dev-smoke|collab-latency|auth-flow)\.spec\.ts/,
   // Warms the served bundles. See the file for why.
   globalSetup: "./e2e/global-setup.ts",
   // Serial: every spec shares one IndexedDB origin and one server, so parallel

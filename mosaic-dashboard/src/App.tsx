@@ -1,5 +1,11 @@
 import { useEffect } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+} from "react-router-dom";
 
 import { storage } from "@/lib/storage";
 import { ActivityPage } from "@/pages/ActivityPage";
@@ -37,6 +43,20 @@ import { ClaimGuestDataPrompt } from "@/components/auth/ClaimGuestDataPrompt";
  * identical to the previous behaviour there.
  */
 const BASENAME = import.meta.env.MOSAIC_DASHBOARD_BASENAME ?? "";
+
+/**
+ * Layout route for everything that wants the two-column shell.
+ *
+ * The sidebar, the account block and the board grid all assume an owner with an
+ * editable store, so a read-only shared-board viewer must not be inside them.
+ * Routing the shell through a layout keeps that boundary in one place instead of
+ * duplicated per route.
+ */
+const ShellLayout = () => (
+  <AppShell>
+    <Outlet />
+  </AppShell>
+);
 
 export const App = () => {
   const loadState = useDashboardStore((s) => s.loadState);
@@ -81,16 +101,20 @@ export const App = () => {
   return (
     <BrowserRouter basename={BASENAME}>
       {/*
-          A shared board is rendered outside AppShell on purpose: the sidebar, the
-          account block and the board grid all assume an owner with an editable store,
-          and a read-only viewer should see none of them.
-        */}
+        ONE route table, not two.
+
+        A shared board must render without the shell, and the obvious way to do that
+        is a second sibling `<Routes>`. That does not work: each `<Routes>` matches
+        independently, so the `*` catch-all below also matched `/share/:token`,
+        navigated to /dashboard, and won the race. The viewer silently landed on the
+        dashboard — which is what the first run of this suite showed.
+
+        A layout route is the correct shape: the shell wraps the routes that want it,
+        and the one route that does not sits beside them.
+      */}
       <Routes>
         <Route path="/share/:token" element={<SharedBoardPage />} />
-      </Routes>
-
-      <AppShell>
-        <Routes>
+        <Route element={<ShellLayout />}>
           {/* STEP 2 route table */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<BoardsPage />} />
@@ -107,8 +131,8 @@ export const App = () => {
               used in dev and by the e2e test. */}
           <Route path="/board/:id" element={<BoardPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </AppShell>
+        </Route>
+      </Routes>
       {/* STEP 4. Renders nothing unless a signed-in user has unclaimed guest rows,
           so it cannot interrupt an anonymous visit. */}
       <ClaimGuestDataPrompt />

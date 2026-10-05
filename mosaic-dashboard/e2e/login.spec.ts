@@ -31,7 +31,9 @@ test.describe("Accounts do not obstruct the anonymous flow", () => {
     await resetLocalData(page);
   });
 
-  test("a visitor with no server is never asked to sign in", async ({ page }) => {
+  test("a visitor with no server is never asked to sign in", async ({
+    page,
+  }) => {
     await waitForDashboard(page);
 
     await expect(page.getByTestId("nav-all-boards")).toBeVisible();

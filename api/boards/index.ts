@@ -35,9 +35,16 @@ const LIST_COLUMNS = `id, name, folder_id, favorite, trashed_at, thumbnail,
  * Query parameters mirror `listBoards` in `db/operations.ts` so the API adapter
  * in STEP 4 can be a drop-in replacement for the Dexie one:
  *
- * - `trashed=1` -> only soft-deleted boards (the trash page). The default is
- *   live boards only, which is what `listBoards` does with `includeTrashed:
- *   false`.
+ * - `trashed=1` -> only soft-deleted boards (the trash page).
+ * - `trashed=all` -> no trash filter at all: live *and* trashed.
+ *
+ * The two-value parameter is not decoration. `includeTrashed` in the storage
+ * interface means "give me everything, I will filter", which is what
+ * `useDashboardStore.reload()` asks for on every page load. Folding it onto
+ * `trashed=1` — the obvious translation — returns only the bin, so the dashboard
+ * renders an empty grid while the rows sit there in Postgres. Omitting the parameter
+ * keeps its existing meaning of live-only, which is what the default asks for.
+ *
  * - `folderId=<uuid>` -> boards in that folder. `folderId=unfiled` selects boards
  *   with no folder, matching `selectors.ts`'s "null means unfiled".
  *
@@ -51,12 +58,17 @@ const LIST_COLUMNS = `id, name, folder_id, favorite, trashed_at, thumbnail,
  */
 const handleGet = async (req: ApiRequest, res: ApiResponse, actor: Actor) => {
   const params = searchParams(req);
-  const trashed = params.get("trashed") === "1";
+  const trashedParam = params.get("trashed");
   const folderParam = params.get("folderId");
 
-  const trashFilter = trashed
-    ? "AND trashed_at IS NOT NULL"
-    : "AND trashed_at IS NULL";
+  // Three states, not two: only-trashed, only-live, or unfiltered. Built as a
+  // fragment rather than a boolean so "no filter" cannot be spelled by accident.
+  const trashFilter =
+    trashedParam === "1"
+      ? "AND trashed_at IS NOT NULL"
+      : trashedParam === "all"
+      ? ""
+      : "AND trashed_at IS NULL";
   const order = "ORDER BY COALESCE(last_opened_at, updated_at) DESC";
   const scope = ownerScope(actor);
 

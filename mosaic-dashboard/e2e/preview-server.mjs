@@ -2,6 +2,8 @@ import { createServer } from "http";
 import { readFile, stat } from "fs/promises";
 import { extname, join } from "path";
 
+import { handleMockApi } from "./mock-api.mjs";
+
 /**
  * Static preview server for the e2e suite.
  *
@@ -32,6 +34,16 @@ const EDITOR_BUILD = process.env.EDITOR_BUILD ?? "";
 const PORT = Number(process.env.PORT ?? 3101);
 const EDITOR_BASE = process.env.EDITOR_BASE ?? "/editor";
 
+/**
+ * Whether to answer `/api/*` from the in-memory mock.
+ *
+ * Off by default, and that matters: the main e2e suite builds the dashboard with no
+ * `VITE_API_URL`, so it never asks for an API, and mounting one would only risk a
+ * spec passing because it talked to a mock it was not meant to. The auth suite sets
+ * this because it cannot run without a server.
+ */
+const MOCK_API = process.env.MOCK_API === "1";
+
 const TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -61,7 +73,9 @@ const TYPES = {
  * path handling here stays plain-string on purpose.
  */
 const safeRelPath = (pathname) => {
-  const segments = pathname.split("/").filter((s) => s && s !== "." && s !== "..");
+  const segments = pathname
+    .split("/")
+    .filter((s) => s && s !== "." && s !== "..");
   return segments.join("/");
 };
 
@@ -115,6 +129,12 @@ createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", `http://localhost:${PORT}`);
   // Raw pathname: see the note on safeRelPath about path.normalize on Windows.
   const pathname = decodeURIComponent(url.pathname);
+
+  // Before any static handling: an API path must never fall through to the SPA
+  // shell, which would answer a JSON request with HTML and a 200.
+  if (MOCK_API && (await handleMockApi(req, res, url))) {
+    return;
+  }
 
   // The editor's built HTML links a sitemap at the site root, but the editor
   // build does not emit one. Serve an empty valid sitemap so the request is not
