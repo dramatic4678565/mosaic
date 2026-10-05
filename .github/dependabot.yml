@@ -3,10 +3,12 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "03:00"
-      timezone: "Asia/Dhaka"
+      # Monthly, not weekly. Every dependency pull request costs a full CI run
+      # (about 18 minutes now, 33 before this branch), and the free plan allows
+      # 2,000 minutes a month. Sixteen pull requests arriving at once is what
+      # exhausted it today, and closing the oversized groups only made Dependabot
+      # regroup them into larger ones (25 and 33 updates) rather than stopping.
+      interval: "monthly"
     open-pull-requests-limit: 5
     versioning-strategy: increase
     labels: ["dependencies", "npm"]
@@ -35,7 +37,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/mosaic-dashboard"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 5
     versioning-strategy: increase
     labels: ["dependencies", "dashboard"]
@@ -46,7 +48,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 5
     labels: ["dependencies", "github-actions"]
     ignore:
