@@ -46,6 +46,10 @@ jobs:
             # scope is declared here. Same change as PR #19, which widened this
             # list for the scopes this fork actually uses.
             auth
+            # Dependabot titles its own pull requests, so its scope has to be
+            # permitted or every automated update is permanently red on this
+            # check. "deps" is what it emits.
+            deps
           ignoreLabels: |
             skip-semantic-title
         env:
