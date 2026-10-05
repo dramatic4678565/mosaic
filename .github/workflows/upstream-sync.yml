@@ -28,20 +28,29 @@ permissions:
   pull-requests: write # open the PR
   issues: write # file an issue when the build is red
 
-# NOTE ON REPOSITORY SETTINGS
+# NOTE ON REPOSITORY SETTINGS — CORRECTED 2026-10-05
 #
-# The block above is necessary but was not sufficient: this workflow also needs
-# the repository-level toggle
+# The block above was assumed to be sufficient, on the belief that the
+# repository-level toggle
 #   Settings -> Actions -> General -> Workflow permissions ->
 #   "Allow GitHub Actions to create and approve pull requests"
-# enabled, which maps to `can_approve_pull_request_reviews` in the API. With it
-# off, `gh pr create` fails with
-#   GraphQL: Resource not accessible by integration (createPullRequest)
-# even though the workflow declares `pull-requests: write` — the two settings are
-# independent and only the second one unlocks PR creation by GITHUB_TOKEN.
+# was the only other gate. That was wrong, and it is now disproved by a run rather
+# than argued.
 #
-# It is currently enabled. If the sync ever fails at exactly that GraphQL error
-# after having pushed its branch, check this toggle first.
+# With the toggle OFF, `gh pr create` fails with
+#   GraphQL: Resource not accessible by integration (createPullRequest)
+# With the toggle ON, it fails with exactly the same error. Verified by run
+# 37297488380 (2026-10-05T16:34Z), the first run dispatched after the toggle was
+# enabled, which again reported `success` while opening nothing.
+#
+# So `GITHUB_TOKEN` cannot open pull requests on this repository at all, whatever
+# the workflow declares. The steps below therefore prefer `secrets.SYNC_PAT` and fall
+# back to the built-in token, so the workflow still runs if the secret is removed.
+# Today it *needs* the secret: without it the run fails, loudly, at the PR step.
+#
+# To restore PR creation, add a fine-grained PAT named SYNC_PAT with
+# contents:rw, pull-requests:rw, issues:rw, workflows:rw at
+#   https://github.com/dramatic4678565/mosaic/settings/secrets/actions
 
 concurrency:
   # One sync at a time. Two overlapping runs would race on the same
@@ -102,7 +111,14 @@ jobs:
         # missing. This step prints the actual effective permissions so the next
         # occurrence is diagnosable from the log instead of by guesswork.
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # SYNC_PAT first, built-in token second. See the note on repository
+          # settings above: with only GITHUB_TOKEN, `gh pr create` still fails
+          # `Resource not accessible by integration (createPullRequest)` on this
+          # repository even with `pull-requests: write` declared *and*
+          # `can_approve_pull_request_reviews` set to true. A PAT is the only
+          # mechanism that works today; the built-in token remains the fallback so
+          # the workflow still functions if the secret is ever removed.
+          GH_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
         run: |
           echo "### effective permissions"
           gh api "repos/${{ github.repository }}/actions/permissions/workflow" \
@@ -120,8 +136,11 @@ jobs:
       - name: Run sync
         id: sync
         env:
-          # Lets `gh pr create` authenticate without a PAT.
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # SYNC_PAT first, built-in token second — see the note on repository
+          # settings above. This is the step that runs `gh pr create` (inside
+          # scripts/sync-upstream.sh), so this is the value that decides whether
+          # the sync can open its pull request at all.
+          GH_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
           # The script pushes with plain git; make sure it can authenticate.
           GIT_TERMINAL_PROMPT: "0"
         run: |

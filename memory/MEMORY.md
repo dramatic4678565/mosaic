@@ -177,6 +177,26 @@ For the bash script, use Git Bash (`C:\Program Files\Git\bin\bash.exe -n`) — `
 
 ---
 
+## SYNC_PAT — the upstream sync cannot open a PR without it
+
+**The sync needs a PAT named `SYNC_PAT`.** Without it, `gh pr create` fails with:
+
+```
+GraphQL: Resource not accessible by integration (createPullRequest)
+```
+
+This is **not** fixed by the workflow declaring `pull-requests: write`, and it is **not** fixed by the repository toggle "Allow GitHub Actions to create and approve pull requests" (`can_approve_pull_request_reviews`). That toggle was set to `true` and run `37297488380` (2026-10-05T16:34Z) — the first run dispatched afterwards — failed with the identical error.
+
+`GITHUB_TOKEN` can push the sync branch (that always worked) but cannot create the pull request on this repository, whatever the workflow asks for. Only a PAT can.
+
+Add it at <https://github.com/dramatic4678565/mosaic/settings/secrets/actions> as a **fine-grained** token with `contents:rw`, `pull_requests:rw`, `issues:rw`, `workflows:rw`, scoped to this repository only.
+
+`upstream-sync.yml` reads `${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}`, so the workflow still runs (and still fails visibly) if the secret is removed.
+
+**A green upstream-sync run does not mean a PR exists.** Four consecutive nightly runs reported `success` while opening nothing. The script used to `warn` and exit 0; it now dies, quotes gh's own error, writes the manual command to the run summary and annotates `::error::`. **Check that a PR exists, not just that the run is green.**
+
+---
+
 ## Known non-defects
 
 - **Vitest is flaky on this machine (Windows).** A pristine `upstream/master` worktree with zero local changes fails a _different_ set of tests on each run (observed: 9, 1, 1 failures across three runs). Every one of them passes in isolation. Do not chase these as regressions without first reproducing them on the untouched baseline.
