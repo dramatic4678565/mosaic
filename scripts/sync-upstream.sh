@@ -118,6 +118,11 @@ failure_report() {
       gh issue edit "$issue_url" --add-label "$PR_LABEL" >/dev/null 2>&1 || true
       warn "issue opened: $issue_url"
     else
+      # The job already fails (exit 1 below) because the *sync* failed. This
+      # annotation is about the issue itself: if it could not be opened, the only
+      # record of the failure is this log, so it is surfaced in the run UI rather
+      # than left to be found later.
+      echo "::error::gh issue create failed — the sync failure was not filed as an issue"
       warn "could not open the issue. gh said:"
       printf '%s\n' "$issue_url" | sed 's/^/    /' >&2
     fi
@@ -357,10 +362,21 @@ fi
 # creating the label first and *silencing* its failure left a run that merged,
 # built, pushed — and then reported "could not open the PR" with no reason.
 # Two independent steps, each with its own diagnostic, cannot mask each other.
+#
+# WHY THIS FAILS THE STEP INSTEAD OF WARNING
+#
+# This used to `warn` and fall through, so the script ended with exit 0 and the
+# job went green. Four consecutive nightly runs (2026-10-02 to 10-05) reported
+# `success` while creating no pull request at all, and pushed a branch each time.
+# A green check that opened nothing is worse than a red one, because it is trusted.
+# So a failure to open the PR is now fatal, with the remediation printed.
 # ---------------------------------------------------------------------------
+
+# A missing `gh` is equally fatal. Pretending the sync succeeded without a PR is
+# the exact failure mode this section exists to prevent.
 if ! command -v gh >/dev/null 2>&1; then
-  warn "'gh' not found; branch pushed to $SYNC_BRANCH but no PR opened"
-  exit 0
+  die "'gh' is not installed, so no PR could be opened. Branch $SYNC_BRANCH was pushed; open it manually:
+    gh pr create --base main --head $SYNC_BRANCH"
 fi
 
 PR_BODY_FILE="$(mktemp)"
@@ -369,19 +385,45 @@ sync_pr_body "$UPSTREAM_REMOTE/$UPSTREAM_BRANCH" "$BEHIND" > "$PR_BODY_FILE"
 
 PR_TITLE="chore(repo): sync with upstream/master ($(git rev-parse --short "$UPSTREAM_REMOTE/$UPSTREAM_BRANCH"))"
 
+# Output is captured rather than streamed so a failure can quote gh's own message
+# verbatim. Without the capture the reason is lost, which is how this went
+# undiagnosed for four days.
 if PR_URL="$(gh pr create --title "$PR_TITLE" --body-file "$PR_BODY_FILE" 2>&1)"; then
   log "PR opened: $PR_URL"
 
+  # Surface the URL where a human will actually see it: the Actions summary, not
+  # only the log, which nobody reads on a green run.
+  {
+    echo "### Sync PR"
+    echo ""
+    echo "Opened [$PR_TITLE]($PR_URL)"
+  } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+
   # Label last, and tolerantly: a missing label must never look like a failed
-  # sync.
+  # sync. The PR exists; the label is cosmetic.
   gh label create "$PR_LABEL" --color "0E8A16" \
     --description "Automated sync from excalidraw/excalidraw" >/dev/null 2>&1 || true
   if ! gh pr edit "$PR_URL" --add-label "$PR_LABEL" >/dev/null 2>&1; then
     warn "PR opened but label '$PR_LABEL' could not be applied"
   fi
 else
-  warn "could not open the PR. gh said:"
-  printf '%s\n' "$PR_URL" | sed 's/^/    /' >&2
-  warn "branch $SYNC_BRANCH was pushed; open the PR manually:"
-  warn "  gh pr create --base main --head $SYNC_BRANCH --title '$PR_TITLE'"
+  # `::error::` annotates the run in the GitHub UI, so this cannot be missed by
+  # someone only looking at the checks list.
+  echo "::error::gh pr create failed — the sync branch was pushed but no pull request exists"
+  printf 'gh said:\n%s\n' "$PR_URL" | sed 's/^/    /' >&2
+  {
+    echo "### Sync PR — FAILED"
+    echo ""
+    echo "The sync branch \`$SYNC_BRANCH\` was pushed but no pull request was opened."
+    echo ""
+    echo '```'
+    printf '%s\n' "$PR_URL"
+    echo '```'
+    echo ""
+    echo "Open it manually:"
+    echo '```'
+    echo "gh pr create --base main --head $SYNC_BRANCH --title '$PR_TITLE'"
+    echo '```'
+  } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+  die "could not open the PR. Branch $SYNC_BRANCH was pushed; the command above opens it."
 fi
