@@ -10,6 +10,20 @@ updates:
     open-pull-requests-limit: 5
     versioning-strategy: increase
     labels: ["dependencies", "npm"]
+    # Majors are opt-in, not automatic.
+    #
+    # The first run of this config opened sixteen pull requests, ten of them major
+    # bumps: vite 5 to 8, vitest 3 to 5, react-router-dom 6 to 7, @types/node 20 to
+    # 26, @babel/preset-env 7 to 8, pako 2 to 3, and three GitHub Actions jumps
+    # including upload-artifact 4 to 7. Each is a breaking change that needs a
+    # person to read the changelog and a plan, not a weekly automated pull request.
+    #
+    # To take one deliberately, ask for it by hand with
+    #   gh pr edit <n> --title ...
+    # or delete the matching entry here.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       production-deps:
         dependency-type: "production"
@@ -23,10 +37,18 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    versioning-strategy: increase
     labels: ["dependencies", "dashboard"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 5
     labels: ["dependencies", "github-actions"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
