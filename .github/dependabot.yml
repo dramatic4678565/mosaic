@@ -55,6 +55,19 @@ updates:
       - dependency-name: "jotai"
       - dependency-name: "jotai-scope"
       - dependency-name: "radix-ui"
+      # Not excluded from the dev-deps group instead: Dependabot raises these
+      # three as standalone pull requests (#96 eslint-config-prettier, #97
+      # prettier, #98 eslint-plugin-prettier), which a group's
+      # exclude-patterns never covers. ignore is the only list that catches
+      # both grouped and standalone updates.
+      #
+      # prettier 2.6.2 to 2.8.8 reformats 272 lines across the editor, all of
+      # them `prettier/prettier` warnings and zero errors, and eslint runs with
+      # --max-warnings=0 so the build stops on formatting alone.
+      # Stats/index.tsx accounts for 181 of the 272 on its own.
+      - dependency-name: "prettier"
+      - dependency-name: "eslint-plugin-prettier"
+      - dependency-name: "eslint-config-prettier"
     groups:
       production-deps:
         dependency-type: "production"
@@ -62,16 +75,6 @@ updates:
       dev-deps:
         dependency-type: "development"
         update-types: ["minor", "patch"]
-        exclude-patterns:
-          # prettier 2.6.2 -> 2.8.8 reformats 272 lines across the editor, all
-          # of them `prettier/prettier` warnings with zero errors. Stats/index.tsx
-          # accounts for 181 on its own. eslint runs with --max-warnings=0, so the
-          # build stops on formatting rather than on behaviour. The reformat is a
-          # real change to the repository's style and wants its own pull request
-          # with a reviewer looking only at that.
-          - "prettier"
-          - "eslint-plugin-prettier"
-          - "eslint-config-prettier"
 
   - package-ecosystem: "npm"
     directory: "/mosaic-dashboard"
