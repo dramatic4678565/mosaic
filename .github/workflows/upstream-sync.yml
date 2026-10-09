@@ -12,10 +12,6 @@ name: Upstream sync
 # contains upstream/master, so the daily cron costs nothing on a quiet day.
 
 on:
-  schedule:
-    # 03:00 UTC daily. Off the hour boundary on purpose: GitHub delays the
-    # top-of-hour scheduled runs to avoid a thundering herd.
-    - cron: "17 3 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
