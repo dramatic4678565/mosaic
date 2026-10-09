@@ -1,0 +1,55 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, Monday 03:40 UTC. Off the hour on purpose, because 03:32 and 03:33
+    # are already taken by the upstream sync and the Dependabot window.
+    - cron: "40 3 * * 1"
+
+# Only main. CodeQL on a push to a fork is a wasted upload, and the scheduled run
+# already covers the default branch weekly.
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # build-mode is "none", not "manual". The JavaScript/TypeScript extractor
+      # does its own dependency tracing and CodeQL rejects manual mode for this
+      # language outright:
+      #
+      #   A fatal error occurred: JavaScript/TypeScript does not support the
+      #   manual build mode. Please try using one of the following build modes
+      #   instead: none.
+      #
+      # There is no build step for the same reason. Running `yarn build:all`
+      # would cost five workspace builds and a PWA service-worker render for no
+      # additional coverage, which is what the manual/autobuild modes are for on
+      # compiled languages. Switch to manual only if a compiled language is ever
+      # added, and drop the build step alongside it.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}

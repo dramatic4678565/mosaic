@@ -10,7 +10,6 @@ updates:
       # regroup them into larger ones (25 and 33 updates) rather than stopping.
       interval: "monthly"
     open-pull-requests-limit: 5
-    versioning-strategy: increase
     labels: ["dependencies", "npm"]
     # Majors are opt-in, not automatic.
     #
@@ -26,6 +25,36 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # These five cannot move inside a grouped production-deps update.
+      #
+      # Dependabot keeps reopening a 25-update production group (#55, #83) and a
+      # 33-update dev group (#56, #87) that both fail, and closing them just makes
+      # the next monthly run rebuild the identical groups. The reasons are
+      # recorded here so nobody has to rediscover them:
+      #
+      #   react, react-dom, jotai  jotai 2.20.3 resolves its own nested react
+      #                             while react-dom uses the hoisted one, so two
+      #                             React instances exist and every render dies
+      #                             with "Cannot read properties of null
+      #                             (reading 'useContext')" at useStore.
+      #                             Pinning react and radix-ui back does not clear
+      #                             it; jotai is the trigger.
+      #
+      #   radix-ui                 1.4.3 to 1.6.7 changes useId output from
+      #                             "radix-:r85:" to "radix-_r_8k_", breaking 3
+      #                             snapshot files for no behavioural change.
+      #
+      #   jotai-scope              tracks jotai; same nested-react problem.
+      #
+      # #72 took the security-relevant bumps from that group with react, jotai and
+      # radix-ui left at their current versions, and it passed: 2505 editor tests,
+      # 52 dashboard tests, and a clean editor build. These five need a deliberate
+      # pull request with the snapshot updates reviewed rather than accepted.
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "jotai"
+      - dependency-name: "jotai-scope"
+      - dependency-name: "radix-ui"
     groups:
       production-deps:
         dependency-type: "production"
@@ -33,13 +62,22 @@ updates:
       dev-deps:
         dependency-type: "development"
         update-types: ["minor", "patch"]
+        exclude-patterns:
+          # prettier 2.6.2 -> 2.8.8 reformats 272 lines across the editor, all
+          # of them `prettier/prettier` warnings with zero errors. Stats/index.tsx
+          # accounts for 181 on its own. eslint runs with --max-warnings=0, so the
+          # build stops on formatting rather than on behaviour. The reformat is a
+          # real change to the repository's style and wants its own pull request
+          # with a reviewer looking only at that.
+          - "prettier"
+          - "eslint-plugin-prettier"
+          - "eslint-config-prettier"
 
   - package-ecosystem: "npm"
     directory: "/mosaic-dashboard"
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
-    versioning-strategy: increase
     labels: ["dependencies", "dashboard"]
     ignore:
       - dependency-name: "*"
