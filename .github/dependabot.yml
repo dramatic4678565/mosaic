@@ -54,3 +54,48 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+
+  # The two directories below are not part of the root `workspaces` list, which is
+  # why they were missed and why they carry most of this repository's alerts.
+  #
+  # Of 380 open Dependabot alerts, 189 are against dev-docs/yarn.lock and 43
+  # against examples/with-nextjs/yarn.lock - 232 of them, in two lockfiles that
+  # nothing was watching. They were not covered by any entry here, so their
+  # transitive dependencies have simply aged: shell-quote and websocket-driver at
+  # critical, axios 23 times at high, node-forge, brace-expansion, postcss, ws.
+  #
+  # Neither tree ships. dev-docs is a Docusaurus site, examples are sample apps.
+  # That is a reason to rank them below the two that do ship, not a reason to leave
+  # them unmanaged, because a compromised build tool is a compromised build.
+  #
+  # Monthly and limit 3 to keep the pull-request count down; these are the lowest
+  # priority of the four ecosystems.
+  - package-ecosystem: "npm"
+    directory: "/dev-docs"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    labels: ["dependencies", "dev-docs"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "npm"
+    directory: "/examples/with-nextjs"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    labels: ["dependencies", "examples"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "npm"
+    directory: "/examples/with-script-in-browser"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    labels: ["dependencies", "examples"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
