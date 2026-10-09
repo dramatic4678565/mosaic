@@ -6,12 +6,12 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    # Weekly, Monday 03:40 UTC. Off the hour so it does not pile onto the
-    # 03:32 upstream sync and the 03:33 Dependabot window.
+    # Weekly, Monday 03:40 UTC. Off the hour on purpose, because 03:32 and 03:33
+    # are already taken by the upstream sync and the Dependabot window.
     - cron: "40 3 * * 1"
 
-# Only main. CodeQL on a push to a fork is a wasted upload, and the scheduled
-# run already covers the default branch weekly.
+# Only main. CodeQL on a push to a fork is a wasted upload, and the scheduled run
+# already covers the default branch weekly.
 permissions:
   contents: read
 
@@ -30,22 +30,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # build-mode is "none", not "manual". The JavaScript/TypeScript extractor
+      # does its own dependency tracing and CodeQL rejects manual mode for this
+      # language outright:
+      #
+      #   A fatal error occurred: JavaScript/TypeScript does not support the
+      #   manual build mode. Please try using one of the following build modes
+      #   instead: none.
+      #
+      # There is no build step for the same reason. Running `yarn build:all`
+      # would cost five workspace builds and a PWA service-worker render for no
+      # additional coverage, which is what the manual/autobuild modes are for on
+      # compiled languages. Switch to manual only if a compiled language is ever
+      # added, and drop the build step alongside it.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          # Autobuild is unreliable on this layout: yarn workspaces with five
-          # build targets (dashboard, editor, vercel assets, dev-docs, examples)
-          # and a PWA plugin that needs a service-worker template from lodash.
-          # Naming the commands is slower and far more predictable.
-          build-mode: manual
-
-      - name: Autobuild
-        id: autobuild
-        continue-on-error: true
-        run: |
-          yarn install --frozen-lockfile
-          yarn build:all
+          build-mode: none
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
