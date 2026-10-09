@@ -35,7 +35,7 @@
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
     "@vitejs/plugin-react": "3.1.0",
-    "fake-indexeddb": "6.2.5",
+    "fake-indexeddb": "3.1.8",
     "jsdom": "22.1.0",
     "sass": "1.105.1",
     "typescript": "5.9.3",
