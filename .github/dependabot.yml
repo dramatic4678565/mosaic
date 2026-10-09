@@ -10,7 +10,6 @@ updates:
       # regroup them into larger ones (25 and 33 updates) rather than stopping.
       interval: "monthly"
     open-pull-requests-limit: 5
-    versioning-strategy: increase
     labels: ["dependencies", "npm"]
     # Majors are opt-in, not automatic.
     #
@@ -79,7 +78,6 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
-    versioning-strategy: increase
     labels: ["dependencies", "dashboard"]
     ignore:
       - dependency-name: "*"
