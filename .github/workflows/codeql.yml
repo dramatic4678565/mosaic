@@ -12,8 +12,19 @@ on:
 
 # Only main. CodeQL on a push to a fork is a wasted upload, and the scheduled run
 # already covers the default branch weekly.
+# security-events: write is what lets the analysis step publish alerts. Without
+# it the run uploads nothing and then fails on main:
+#
+#   This run of the CodeQL Action does not have permission to access the CodeQL
+#   Action API endpoints. ... please ensure the workflow has at least the
+#   'security-events: read' permission.
+#
+# It looked green on pull requests because a pull_request run has no permission
+# to write results anyway, so the missing scope only surfaced once the workflow
+# ran on the default branch.
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   analyze:
