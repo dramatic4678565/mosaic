@@ -1,0 +1,53 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, Monday 03:40 UTC. Off the hour so it does not pile onto the
+    # 03:32 upstream sync and the 03:33 Dependabot window.
+    - cron: "40 3 * * 1"
+
+# Only main. CodeQL on a push to a fork is a wasted upload, and the scheduled
+# run already covers the default branch weekly.
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Autobuild is unreliable on this layout: yarn workspaces with five
+          # build targets (dashboard, editor, vercel assets, dev-docs, examples)
+          # and a PWA plugin that needs a service-worker template from lodash.
+          # Naming the commands is slower and far more predictable.
+          build-mode: manual
+
+      - name: Autobuild
+        id: autobuild
+        continue-on-error: true
+        run: |
+          yarn install --frozen-lockfile
+          yarn build:all
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}
