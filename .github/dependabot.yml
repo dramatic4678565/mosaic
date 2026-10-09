@@ -68,6 +68,13 @@ updates:
       - dependency-name: "prettier"
       - dependency-name: "eslint-plugin-prettier"
       - dependency-name: "eslint-config-prettier"
+      # pako deflates embedded image payloads into the SVG metadata, so 2.0.3 to
+      # 2.2.0 rewrites the base64 in every export snapshot: five assertion
+      # failures plus one snapshot mismatch in export.test.tsx, all from this
+      # one dependency. Pinning it back to 2.0.3 makes all 8 export tests pass,
+      # which is how it was confirmed as the sole trigger rather than guessed at.
+      # The other 19 packages in that group move fine with it held back.
+      - dependency-name: "pako"
     groups:
       production-deps:
         dependency-type: "production"
