@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { BRAND } from "@mosaic/brand";
 
+import styles from "./BoardPage.module.scss";
+
 import type { Board } from "@/db/schema";
 
 import { storage } from "@/lib/storage";
@@ -25,6 +27,18 @@ import { useDashboardStore } from "@/state/useDashboardStore";
  * `#board=<id>` hash (STEP 6), loads the scene from IndexedDB itself, and
  * autosaves. This page's job is to render that iframe, show a back link, and
  * mirror save status back into the dashboard store.
+ *
+ * ## Why this route is outside the app shell
+ *
+ * It used to render inside `<AppShell>`, which wraps it in a persistent sidebar
+ * plus a padded, scrollable content column. That is right for the board list and
+ * wrong for the editor: the sidebar took 248px, the shell's padding took the rest
+ * of the gutter, and the iframe was left small. Worse, a flex chain that
+ * resolves to zero makes Excalidraw size its canvas to zero and never recover.
+ *
+ * So `/board/:id` sits beside the shell route rather than inside it, and this
+ * page owns a fixed full-viewport layout of its own. `AppShell` is untouched,
+ * because every other page still wants it.
  */
 export const BoardPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -86,11 +100,8 @@ export const BoardPage = () => {
 
   if (missing) {
     return (
-      <div
-        data-testid="board-missing"
-        style={{ padding: 40, textAlign: "center" }}
-      >
-        <h1 style={{ fontSize: 20 }}>Board not found</h1>
+      <div className={styles.missing} data-testid="board-missing">
+        <h1 className={styles.missing__title}>Board not found</h1>
         <button type="button" onClick={() => navigate("/dashboard")}>
           {t("editor.back")}
         </button>
@@ -105,77 +116,43 @@ export const BoardPage = () => {
   const editorUrl = buildEditorUrl(id);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        // `height: 100%` alone chains through two flex ancestors and is
-        // fragile: when it resolves to 0 the editor measures a zero-height
-        // iframe, sizes its canvas to 0, and never recovers. The explicit
-        // min-height guarantees the editor always has a viewport to lay out in.
-        height: "100%",
-        minHeight: 520,
-      }}
-      data-testid="board-page"
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "8px 4px",
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => navigate("/dashboard")}
-          data-testid="back-to-dashboard"
-          style={{
-            padding: "8px 14px",
-            border: "1px solid #e3e7ef",
-            borderRadius: 8,
-            background: "#fff",
-          }}
-        >
-          ← {t("editor.back")}
-        </button>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            fontSize: 13,
-          }}
-        >
-          <span style={{ fontWeight: 600 }}>{board?.name ?? "…"}</span>
-          {saveState === "saving" ? (
-            <span data-testid="save-status" style={{ color: "#5b6676" }}>
-              {t("editor.unsaved")}
-            </span>
-          ) : saveState === "saved" ? (
-            <span data-testid="save-status" style={{ color: "#2f9e6f" }}>
-              {t("editor.saved")}
-            </span>
-          ) : null}
+    <div className={styles.page} data-testid="board-page">
+      {/**
+       * Slim bar, not a page header. It carries the board name and the way back,
+       * and it is fixed-height so the editor gets every remaining pixel.
+       */}
+      <div className={styles.bar}>
+        <div className={styles.bar__left}>
+          <a
+            className={styles.back}
+            href="/dashboard"
+            data-testid="back-to-dashboard"
+          >
+            ← {t("editor.back")}
+          </a>
+          <span className={styles.name}>{board?.name ?? "…"}</span>
         </div>
+        {saveState === "saving" ? (
+          <span className={styles.status} data-testid="save-status">
+            {t("editor.unsaved")}
+          </span>
+        ) : saveState === "saved" ? (
+          <span className={styles.status} data-testid="save-status">
+            {t("editor.saved")}
+          </span>
+        ) : null}
       </div>
 
       <iframe
         ref={iframeRef}
-        // The editor app runs in its own document; give it all the space it needs.
-        style={{
-          flex: 1,
-          width: "100%",
-          // Same reasoning as the container above: never let the editor's
-          // viewport resolve to 0, or its canvas is sized to 0 and stays that
-          // way even after the layout settles.
-          minHeight: 480,
-          border: "1px solid #e3e7ef",
-          borderRadius: 12,
-        }}
+        className={styles.frame}
         src={editorUrl}
         title={`${BRAND.name} editor`}
         data-testid="editor-frame"
+        // Excalidraw writes into IndexedDB and reads it back. A third-party
+        // cookie blocking the dashboard's session does not affect a same-origin
+        // frame, but being explicit costs nothing and documents the intent.
+        allow="clipboard-read; clipboard-write"
       />
     </div>
   );

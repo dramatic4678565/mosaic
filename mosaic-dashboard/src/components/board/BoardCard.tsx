@@ -85,6 +85,19 @@ export const BoardCard = ({
    * child of this card, so a click on a menu item bubbles here too and would
    * open the board. The `menuOpen` check short-circuits that: while the menu is
    * open, clicks coming from it must not be treated as a card activation.
+   *
+   * Ctrl/Cmd+click opens a new tab.
+   *
+   * This cannot be done with an `<a href>` wrapper, because the card contains
+   * buttons and an input for select, rename and the overflow menu, and nesting
+   * interactive elements inside an anchor is invalid HTML: assistive technology
+   * treats the whole card as one link and the inner controls stop being
+   * reachable. So the tab behaviour is done explicitly and everything else keeps
+   * its native semantics.
+   *
+   * Middle-click is not handled. React does not deliver it as a click, and
+   * `window.open` cannot be driven from `auxclick` reliably across browsers. That
+   * is the one case an anchor would have given for free.
    */
   const handleClick = (event: React.MouseEvent) => {
     if (renaming || menuOpen) {
@@ -94,14 +107,13 @@ export const BoardCard = ({
       onRangeSelect();
       return;
     }
-    if (event.metaKey || event.ctrlKey) {
-      onToggleSelect();
+    if (isTrashView) {
       return;
     }
-    if (selected) {
-      // Clicking an already-selected card opens it; this matches how native
-      // file managers treat a single-selected item.
-      open();
+    if (event.metaKey || event.ctrlKey) {
+      // Browser-standard new tab, and `noopener` so the opened page cannot reach
+      // back through `window.opener`.
+      window.open(`/board/${board.id}`, "_blank", "noopener,noreferrer");
       return;
     }
     open();
