@@ -113,7 +113,18 @@ export const App = () => {
         and the one route that does not sits beside them.
       */}
       <Routes>
+        {/**
+         * The board editor and the shared viewer sit beside the shell, not inside
+         * it. Both render an iframe that needs the whole viewport: inside the shell
+         * they lost 248px to the sidebar plus the shell's padding, and a flex chain
+         * that resolves to zero makes Excalidraw size its canvas to zero permanently.
+         *
+         * This is the same reasoning as the shared board above, and it is why this
+         * is one route table rather than two: a second sibling `<Routes>` would let
+         * the `*` catch-all match these paths and win the race.
+         */}
         <Route path="/share/:token" element={<SharedBoardPage />} />
+        <Route path="/board/:id" element={<BoardPage />} />
         <Route element={<ShellLayout />}>
           {/* STEP 2 route table */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -126,10 +137,6 @@ export const App = () => {
           {/* STEP 3. Reachable only by an explicit "Sign in" link — nothing
               redirects here, so the anonymous flow never encounters it. */}
           <Route path="/login" element={<LoginPage />} />
-          {/* Editor hand-off. The dashboard routes the user to the editor app
-              with #board=<id>; this route renders the in-dashboard editor view
-              used in dev and by the e2e test. */}
-          <Route path="/board/:id" element={<BoardPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>

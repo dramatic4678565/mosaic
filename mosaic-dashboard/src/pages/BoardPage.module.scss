@@ -1,0 +1,120 @@
+/*
+ * Full-screen board page.
+ *
+ * The editor iframe needs the whole viewport. Inside the app shell it got a
+ * 248px sidebar plus the shell's padding, which left it visibly cramped, and a
+ * flex chain that resolves to zero makes Excalidraw size its canvas to zero and
+ * never recover.
+ *
+ * So `/board/:id` sits outside the shell and this file owns the full-viewport
+ * layout. Values are CSS custom properties with a fallback rather than `@use`,
+ * matching the other page-level stylesheets in this directory, which is what
+ * keeps this consistent with LoginPage and SharedBoardPage.
+ */
+.page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text, #1f2733);
+  font-family: var(--font-ui, Inter, "Segoe UI", -apple-system, sans-serif);
+  /* The page itself never scrolls; only the editor's own canvas does. Letting
+     the page scroll as well gives the editor a viewport that changes under it,
+     which is what made Excalidraw mis-measure before. */
+  overflow: hidden;
+}
+
+/*
+ * Slim bar above the editor.
+ *
+ * Deliberately not a page header: it exists so you can see which board you are
+ * in and get back, and it should not compete with the canvas for attention.
+ */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--color-border, #e3e7ef);
+  background: var(--color-surface, #ffffff);
+}
+
+.bar__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border, #e3e7ef);
+  border-radius: var(--radius-md, 10px);
+  background: var(--color-surface, #ffffff);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.back:hover {
+  background: var(--color-surface-raised, #f8f9fb);
+}
+
+.name {
+  font-weight: 600;
+  font-size: 14px;
+  /* A long board name must not push the save status off the bar. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--color-text-muted, #5b6676);
+}
+
+/*
+ * The editor's viewport.
+ *
+ * `flex: 1` with an explicit `min-height: 0` is what makes this actually fill
+ * the remaining space. Without min-height 0 a flex item refuses to shrink below
+ * its content, and Excalidraw's canvas has no intrinsic height, so the iframe
+ * collapses.
+ *
+ * No border and no radius: the editor is the page here, and a frame around it
+ * made it look embedded rather than open.
+ */
+.frame {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  display: block;
+  background: #ffffff;
+}
+
+.missing {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.missing__title {
+  margin: 0;
+  font-size: 20px;
+}
